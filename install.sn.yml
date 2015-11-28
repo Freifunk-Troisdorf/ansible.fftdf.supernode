@@ -1,0 +1,230 @@
+# First install ssh-key at remote computer
+# In case of python error start:
+# ansible troisdorf4 -u root -m raw -a "apt-get update && apt-get install python -y"
+# Version 3.1, gre-backbone
+
+- name: Install Freifunk Troisdorf super node
+#  hosts: FreifunkSupernodesL2TP
+  hosts: '{{ target }}'
+  sudo: False
+  user: root
+  gather_facts: False
+  vars:
+    common_required_packages:
+      - git
+      - make
+      - gcc
+      - build-essential
+      - pkg-config
+      - libgps-dev
+      - libnl-3-dev
+      - libjansson-dev
+      - isc-dhcp-server
+#      - openvpn
+      - collectd
+      - libcap-dev
+      - iproute
+      - libnetfilter-conntrack3
+      - python-dev
+      - libevent-dev
+      - ebtables
+      - python-virtualenv
+      - iptables-persistent
+      - batctl
+      - iftop
+      - screen
+      - bridge-utils
+      - tcpdump
+    modules_required:
+      - batman-adv
+      - nf_conntrack_netlink
+      - nf_conntrack
+      - nfnetlink
+      - l2tp_netlink
+      - l2tp_core
+      - l2tp_eth
+    tunneldigger_scripts:
+      - start-broker.sh
+      - batdelif.sh
+    tunneldigger_service:
+      - tunneldigger.service
+#    openvpn_files:
+#      - mullvad_linux.conf
+#      - mullvad.key
+#      - mullvad.crt
+#      - ca.crt
+#      - crl.pem
+#    openvpn_scripts:
+#      - up.sh
+#      - down.sh
+    check_gw_script:
+      - keepalive.sh
+    backbone_script:
+      - gre_backbone.sh
+    system_startup:
+      - "# Routing einschalten"
+      - /sbin/sysctl -w net.ipv6.conf.all.forwarding=1
+      - /sbin/sysctl -w net.ipv4.ip_forward=1
+#      - "# Routing Tabelle 42 fuer Freifunk anlegen, wenn noch nicht vorhanden"
+#      - #/bin/grep 42 /etc/iproute2/rt_tables || echo '42 42' >> /etc/iproute2/rt_tables"
+#      - "# Freifunk Daten sollen mit 0x1 markiert werden"
+#      - /sbin/iptables -t mangle -A PREROUTING -i bat0 -j MARK --set-xmark 0x1
+#      - "# Erstmal unreachable melden, ausser OpenVPN ist aufgebaut"
+#      - "#/sbin/ip route add unreachable default table 42"
+#      - "# Alles was mit 0x1 markiert ist soll nach Routing Tabelle 42 behandelt werden"
+#      - "/sbin/ip rule add from all fwmark 0x1 table 42 priority 4"
+      - "#NAT auf eth0 aktivieren"
+      - /sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+      - "#GRE Backbone aufbauen"
+      - /opt/freifunk/gre_backbone.sh
+    authorized_keys:
+      - authorized_keys
+
+  tasks:
+    - name: Remove cdrom in sources.list
+      raw: "sed -i '/deb cdrom/c\\#' /etc/apt/sources.list"
+    - name: Make this server ansible compatible
+      raw: "apt-get update && apt-get install python -y"
+    - name: Add backport repo to source list #target: /etc/apt/sources.list.d
+      apt_repository: repo='deb http://http.debian.net/debian jessie-backports main' state=present 
+    - name: Update apt cache
+      apt: update_cache=yes
+#    - name: Install new kernel
+#      apt: name=linux-image-4.2.0-0.bpo.1-amd64 state=present
+#      register: kernel4
+    - name: Gathering facts
+      setup:
+    - name: Set IPv4 in hostfile
+      lineinfile: dest=/etc/hosts regexp='^{{ ansible_default_ipv4.address }}' line='{{ ansible_default_ipv4.address }} {{ sn_hostname }}.{{ sn_fqdn }} {{ sn_hostname }}' owner=root group=root mode=0644 state=present
+    - name: Set IPv6 in hostfile
+      lineinfile: dest=/etc/hosts regexp='^{{ ansible_default_ipv6.address }}' line='{{ ansible_default_ipv6.address }} {{ sn_hostname }}.{{ sn_fqdn }} {{ sn_hostname }}' owner=root group=root mode=0644 state=present
+      when: ansible_default_ipv6.address is defined
+    - name: set hostname
+      hostname: name='{{ sn_hostname }}'
+      register: hostname
+    - name: Reboot the server
+      shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+      async: 1
+      poll: 0
+      ignore_errors: true
+      when: hosts.changed
+      when: hostname.changed
+    - name: waiting for server to come back
+      local_action:
+                   wait_for
+                   host={{ inventory_hostname }}
+                   port=22
+                   delay=15
+                   timeout=300
+      when: hosts.changed
+      when: hostname.changed
+    - name: Install common required packages
+      apt: state=installed pkg={{ item }}
+      with_items: common_required_packages
+      register: apt_updates
+    - name: Install Linux headers
+      shell: "apt-get install linux-headers-$(uname -r) -y"
+      when: apt_updates.changed
+    - name: Add modules
+      lineinfile: dest=/etc/modules line={{ item }}
+      with_items: modules_required
+      register: modules_req
+    - name: Load modules
+      modprobe: name={{ item }}
+      with_items: modules_required
+      when: modules_req.changed
+    - name: Get Tunneldigger
+      git: repo=https://github.com/wlanslovenija/tunneldigger.git
+           dest=/srv/tunneldigger
+      register: tunneldigger
+    - name: Configure tunneldigger
+      command: "{{item}}"
+      with_items:
+       - virtualenv /srv/tunneldigger/ -p python2.7
+      when: tunneldigger.changed
+    - name: Tunneldigger requirements
+      pip: requirements=/srv/tunneldigger/broker/requirements.txt virtualenv=/srv/tunneldigger/
+      when: tunneldigger.changed
+    - name: Copy l2tp broker config template
+      template: src=./files/l2tp_broker.cfg.j2 dest=/srv/tunneldigger/l2tp_broker.cfg owner=root group=root mode=0444
+      when: tunneldigger.changed
+    - name: Copy tunneldigger script template
+      template: src=./files/bataddif.sh.j2 dest=/srv/tunneldigger/bataddif.sh owner=root group=root mode=0500
+      when: tunneldigger.changed
+    - name: Copy tunneldigger scripts
+      copy: src=./files/{{ item }} dest=/srv/tunneldigger owner=root group=root mode=0500
+      with_items: tunneldigger_scripts
+      when: tunneldigger.changed
+    - name: Copy tunneldigger service file
+      copy: src=./files/{{ item }} dest=/etc/systemd/system/tunneldigger.service owner=root group=root mode=0444
+      with_items: tunneldigger_service
+      when: tunneldigger.changed
+    - name: Tunneldigger reload
+      command: "{{item}}"
+      with_items:
+      - systemctl daemon-reload
+      - systemctl enable tunneldigger.service
+      when: tunneldigger.changed
+    - name: Check if alfred is installed
+      command: dpkg-query -W alfred
+      register: alfred_check_deb
+      failed_when: alfred_check_deb.rc > 1
+      changed_when: alfred_check_deb.rc == 1
+    - name: Download alfred
+      get_url: 
+             url="https://firmware.freifunk-wuppertal.net/deb/alfred_2015.0_amd64.deb"
+             dest="/tmp/alfred_2015.0_amd64.deb"
+      when: alfred_check_deb.rc == 1
+    - name: Install alfred
+      apt: deb="/tmp/alfred_2015.0_amd64.deb"
+      sudo: False
+      when: alfred_check_deb.rc == 1
+#    - name: copy openvpn files
+#      copy: src=./files/{{ item }} dest=/etc/openvpn owner=root group=root mode=0400
+#      with_items: openvpn_files
+#    - name: copy openvpn scripts
+#      copy: src=./files/{{ item }} dest=/etc/openvpn owner=root group=root mode=0500
+#      with_items: openvpn_scripts
+    - name: Create freifunk directory
+      file: path=/opt/freifunk state=directory mode=0755
+    - name: Check gateway / keepalive script
+      copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
+      with_items: check_gw_script
+      register: check_gw
+    - name: Add cron job with check gateway script
+      cron: name=check_gw job="/opt/freifunk/keepalive.sh > /dev/null 2>&1" user="root" 
+      when: check_gw.changed
+    - name: Copy dhcpd template file
+      template: src=./files/dhcpd.conf.j2 dest=/etc/dhcp/dhcpd.conf owner=root group=root mode=0444
+    - name: Copy backbone script
+      copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
+      with_items: backbone_script
+    - name: Collectd template file
+      template: src=./files/collectd.conf.j2 dest=/etc/collectd/collectd.conf owner=root group=root mode=0444
+    - name: configure rc.local 1st
+      lineinfile: dest=/etc/rc.local line="{{ item }}" state=present
+      with_items: system_startup
+      register: rc
+    - name: configure rc.local 2nd
+      lineinfile: dest=/etc/rc.local line="exit 0" state=absent
+      when: rc.changed
+    - name: configure rc.local 3rd
+      lineinfile: dest=/etc/rc.local line="exit 0" state=present
+      when: rc.changed
+    - name: SSH authorized_keys
+      copy: src=./files/{{ item }} dest=/root/.ssh owner=root group=root mode=0400
+      with_items: authorized_keys
+    - name: Reboot the server finally
+      shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+      async: 1
+      poll: 0
+      ignore_errors: true
+      when: tunneldigger.changed
+    - name: waiting for server to come back
+      local_action:
+                   wait_for
+                   host={{ inventory_hostname }}
+                   port=22
+                   delay=15
+                   timeout=300
+      when: tunneldigger.changed

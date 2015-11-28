@@ -1,0 +1,50 @@
+#!/bin/bash
+INTERFACE=eth0       # Set to name of VPN interface
+shopt -s nullglob
+
+# Test whether gateway is connected to the outer world via VPN
+ping -q -I $INTERFACE 8.8.8.8 -c 4 -i 1 -W 5 >/dev/null 2>&1
+
+if test $? -eq 0; then
+    NEW_STATE=server
+else
+    NEW_STATE=off
+fi
+
+# Iterate through network interfaces in sys file system
+for MESH in /sys/class/net/*/mesh; do
+# Check whether gateway modus needs to be changed
+OLD_STATE="$(cat $MESH/gw_mode)"
+[ "$OLD_STATE" == "$NEW_STATE" ] && continue
+   echo $NEW_STATE > $MESH/gw_mode
+   echo 92MBit/92MBit > $MESH/gw_bandwidth
+   logger "batman gateway mode changed to $NEW_STATE"
+
+   # Check whether gateway modus has been deactivated
+   if [ "$NEW_STATE" == "off" ]; then
+       # Shutdown DHCP server to prevent renewal of leases
+       /usr/sbin/service isc-dhcp-server stop
+   fi
+
+   # Check whether gateway modus has been activated
+   if [ "$NEW_STATE" == "server" ]; then
+       # Restart DHCP server
+       /usr/sbin/service isc-dhcp-server start
+   fi
+   exit 0
+done
+
+if [ "$NEW_STATE" == "server" ]; then
+   /usr/sbin/service isc-dhcp-server status 2>&1> /dev/null
+   if  $? -ne 0 
+   then
+       /usr/sbin/service isc-dhcp-server restart
+   fi
+fi
+if [ "$NEW_STATE" == "off" ]; then
+   /usr/sbin/service isc-dhcp-server status 2>&1> /dev/null
+   if  $? -eq 0 
+   then
+       /usr/sbin/service isc-dhcp-server stop
+   fi
+fi

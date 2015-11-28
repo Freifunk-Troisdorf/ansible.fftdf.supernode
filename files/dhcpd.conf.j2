@@ -1,0 +1,14 @@
+ddns-update-style none;
+option domain-name "fftdf";
+default-lease-time 300;
+max-lease-time 3600;
+log-facility local7;
+subnet 10.188.0.0 netmask 255.255.0.0 {
+authoritative;
+range {{ sn_dhcp_range }};
+option domain-name-servers {{ sn_dhcp_dns }};
+option routers {{ sn_dhcp_router }};
+interface bat0;
+
+}
+

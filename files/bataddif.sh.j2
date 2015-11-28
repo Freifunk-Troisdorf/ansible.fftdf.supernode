@@ -1,0 +1,7 @@
+#!/bin/bash
+INTERFACE="$3"
+
+ip link set address {{ sn_mesh_MAC }} dev $INTERFACE
+
+ip link set dev $INTERFACE up mtu 1312
+/usr/sbin/batctl if add $INTERFACE
