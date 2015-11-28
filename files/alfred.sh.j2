@@ -1,0 +1,66 @@
+#!/bin/sh
+
+release=$(/bin/uname -r)
+nodeid=$( /bin/echo {{ sn_mesh_MAC }} | /bin/sed s/://g)
+meshh_if=$(/bin/cat /sys/class/net/*/address | /bin/grep -v ^00:00:00)
+tempfile=/tmp/alfred_info
+
+if [ -f $tempfile ]
+ then
+  /bin/rm $tempfile
+fi
+
+/bin/cat > $tempfile <<EOF
+{
+"network": {
+"mac": "{{ sn_mesh_MAC }}",
+"addresses": [
+"{{ sn_mesh_IPv6 }}"
+"{{ sn_mesh_IPv4 }}"
+],
+"mesh_interfaces": [
+$(for i in $meshh_if; do /bin/echo '"'$i'",';done)
+"{{ sn_mesh_MAC }}"
+]
+},
+"vpn": true,
+"node_id": "$nodeid",
+"hostname": "Gateway:{{ sn_hostname }}",
+"hardware": {'
+"model": "{{ ansible_lsb.description }}"
+},
+"owner": {
+"contact": "fftro/stefand"
+},
+"software": {
+"fastd": {
+"version": "v16",
+"enabled": true
+},
+"autoupdater": {
+"enabled": false,
+"branch": "server"
+},
+"firmware": {
+"release": "$release",
+"base": "{{ ansible_os_family }}"
+},
+"batman-adv": {
+"compat": 15,
+"version": "2014.3.0-47-g21f67df-dirty,"
+}
+}
+}
+EOF
+
+if [ -f $tempfile ]
+ then
+  /bin/cat "$tempfile" | /bin/gzip | /usr/sbin/alfred -s 158
+fi
+
+if [ -f $tempfile ]
+ then
+  /bin/rm $tempfile
+fi
+
+exit 0

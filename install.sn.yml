@@ -1,7 +1,7 @@
 # First install ssh-key at remote computer
 # In case of python error start:
 # ansible troisdorf4 -u root -m raw -a "apt-get update && apt-get install python -y"
-# Version 3.1, gre-backbone
+# Version 3.2, gre-backbone
 
 - name: Install Freifunk Troisdorf super node
 #  hosts: FreifunkSupernodesL2TP
@@ -228,3 +228,7 @@
                    delay=15
                    timeout=300
       when: tunneldigger.changed
+    - name: Alfed message
+      template: src=./files/alfred.sh.j2 dest=/opt/freifunk/alfred.sh owner=root group=root mode=0544
+    - name: Add cron job with alfred info script
+      cron: name=alfred_info job="/opt/freifunk//opt/freifunk/alfred.sh > /dev/null 2>&1" user="root"
