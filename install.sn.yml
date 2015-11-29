@@ -35,6 +35,7 @@
       - screen
       - bridge-utils
       - tcpdump
+      - bind9
     modules_required:
       - batman-adv
       - nf_conntrack_netlink
@@ -48,6 +49,8 @@
       - batdelif.sh
     tunneldigger_service:
       - tunneldigger.service
+    bind_zone_fftdf:
+      - named.conf.fftdf
 #    openvpn_files:
 #      - mullvad_linux.conf
 #      - mullvad.key
@@ -89,9 +92,9 @@
       apt_repository: repo='deb http://http.debian.net/debian jessie-backports main' state=present 
     - name: Update apt cache
       apt: update_cache=yes
-#    - name: Install new kernel
-#      apt: name=linux-image-4.2.0-0.bpo.1-amd64 state=present
-#      register: kernel4
+    - name: Install new kernel
+      apt: name=linux-image-4.2.0-0.bpo.1-amd64 state=present
+      register: kernel4
     - name: Gathering facts
       setup:
     - name: Set IPv4 in hostfile
@@ -109,6 +112,12 @@
       ignore_errors: true
       when: hosts.changed
       when: hostname.changed
+    - name: disable multi CPU Kernel (SMP)
+      lineinfile: dest=/etc/default/grub regexp='^GRUB_CMDLINE_LINUX_DEFAULT=' line='GRUB_CMDLINE_LINUX_DEFAULT="quiet maxcpus=0 nosmp"' state=present
+      register: grubnosmp
+    - name: Update grub
+      shell: update-grub2
+      when: grubnosmp.changed
     - name: waiting for server to come back
       local_action:
                    wait_for
@@ -214,6 +223,13 @@
     - name: SSH authorized_keys
       copy: src=./files/{{ item }} dest=/root/.ssh owner=root group=root mode=0400
       with_items: authorized_keys
+    - name: Copy secondary zone file
+      copy: src=./files/{{ item }} dest=/etc/bind owner=root group=bind mode=644
+      with_items: bind_zone_fftdf
+    - name: Bind9, activate fftdf zone
+      lineinfile: dest=/etc/bind/named.conf line='include "/etc/bind/named.conf.fftdf";' state=present
+    - name: Copy option template
+      template: src=./files/named.conf.options.j2 dest=/etc/bind/named.conf.options owner=root group=bind mode=644
     - name: Reboot the server finally
       shell: sleep 2 && shutdown -r now "Ansible updates triggered"
       async: 1
@@ -231,4 +247,4 @@
     - name: Alfed message
       template: src=./files/alfred.sh.j2 dest=/opt/freifunk/alfred.sh owner=root group=root mode=0544
     - name: Add cron job with alfred info script
-      cron: name=alfred_info job="/opt/freifunk//opt/freifunk/alfred.sh > /dev/null 2>&1" user="root"
+      cron: name=alfred_info job="/opt/freifunk/alfred.sh > /dev/null 2>&1" user="root"

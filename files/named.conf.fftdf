@@ -1,0 +1,6 @@
+zone "fftdf" {
+  type slave;
+  masters { 10.188.1.100; };
+  file "/var/lib/bind/db.fftdf";
+};
+

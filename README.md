@@ -3,6 +3,7 @@ Ansible yml file to manage Freifunk Troisdorf supernodes
 
 At this time you have to start it explicit with the target server
 example: ansible-playbook install.sn.yml --extra-vars "target=troisdorf5"
+example: ansible-playbook install.sn.yml --extra-vars "target=troisdorf[4,5,6]"
 
 You need this information in your hosts (/etc/ansible/hosts) file:
 #example, I hope self explaining

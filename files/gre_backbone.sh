@@ -36,9 +36,10 @@ for i in $server; do
 done
 
 # configure bat0
-ip link set address $communitymacaddress$:0{localserver#$communityname} dev bat0
+ip link set address $communitymacaddress$:0${localserver#$communityname} dev bat0
 ip link set up dev bat0
 ip addr add $communitynetwork.$octet3rd.${localserver#$communityname}/16 broadcast $communitynetwork.255.255 dev bat0
 ip -6 addr add fda0:747e:ab29:7405:255::${localserver#$communityname}/64 dev bat0
 alfred -i bat0 > /dev/null 2>&1 &
 batadv-vis -i bat0 -s > /dev/null 2>&1 &
+service bind9 restart

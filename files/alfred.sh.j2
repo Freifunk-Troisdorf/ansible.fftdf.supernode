@@ -15,7 +15,7 @@ fi
 "network": {
 "mac": "{{ sn_mesh_MAC }}",
 "addresses": [
-"{{ sn_mesh_IPv6 }}"
+"{{ sn_mesh_IPv6 }}",
 "{{ sn_mesh_IPv4 }}"
 ],
 "mesh_interfaces": [
@@ -26,29 +26,11 @@ $(for i in $meshh_if; do /bin/echo '"'$i'",';done)
 "vpn": true,
 "node_id": "$nodeid",
 "hostname": "Gateway:{{ sn_hostname }}",
-"hardware": {'
-"model": "{{ ansible_lsb.description }}"
+"hardware": {
+"model": "vServer"
 },
 "owner": {
-"contact": "fftro/stefand"
-},
-"software": {
-"fastd": {
-"version": "v16",
-"enabled": true
-},
-"autoupdater": {
-"enabled": false,
-"branch": "server"
-},
-"firmware": {
-"release": "$release",
-"base": "{{ ansible_os_family }}"
-},
-"batman-adv": {
-"compat": 15,
-"version": "2014.3.0-47-g21f67df-dirty,"
-}
+"contact": "stefan@freifunk-troisdorf.de"
 }
 }
 EOF

@@ -6,7 +6,7 @@ log-facility local7;
 subnet 10.188.0.0 netmask 255.255.0.0 {
 authoritative;
 range {{ sn_dhcp_range }};
-option domain-name-servers {{ sn_dhcp_dns }};
+option domain-name-servers {{ sn_mesh_IPv4 }}, {{ sn_dhcp_dns }};
 option routers {{ sn_dhcp_router }};
 interface bat0;
 

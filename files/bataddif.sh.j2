@@ -1,7 +1,27 @@
 #!/bin/bash
 INTERFACE="$3"
+#MAC="$8"
+#BLACKLISTFILE=/opt/freifunk/blockliste.txt
 
-ip link set address {{ sn_mesh_MAC }} dev $INTERFACE
 
+#if [ -f /opt/freifunk/blockliste.txt ] 
+
+#if [ -f $BLACKLISTFILE ]
+#  then
+#    BLOCKLISTE=$(cat /opt/freifunk/blockliste.txt)
+#  else
+#    touch=$BLOCKLISTE
+#fi 
+
+#for i in $BLOCKLISTE;
+#do
+#    if [[ $i == $MAC ]]; then
+#      exit 1
+#    fi
+#done
+
+#ip link set address {{ sn_mesh_MAC }} dev $INTERFACE
+ifconfig $INTERFACE hw ether {{ sn_mesh_MAC }}
 ip link set dev $INTERFACE up mtu 1312
 /usr/sbin/batctl if add $INTERFACE
+
