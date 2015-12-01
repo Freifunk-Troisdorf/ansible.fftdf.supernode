@@ -1,7 +1,6 @@
 # First install ssh-key at remote computer
 # In case of python error start:
 # ansible troisdorf4 -u root -m raw -a "apt-get update && apt-get install python -y"
-# Version 3.2, gre-backbone
 
 - name: Install Freifunk Troisdorf super node
 #  hosts: FreifunkSupernodesL2TP
@@ -146,6 +145,7 @@
       git: repo=https://github.com/wlanslovenija/tunneldigger.git
            dest=/srv/tunneldigger
       register: tunneldigger
+      when: apt_updates.changed
     - name: Configure tunneldigger
       command: "{{item}}"
       with_items:
@@ -210,6 +210,10 @@
       with_items: backbone_script
     - name: Collectd template file
       template: src=./files/collectd.conf.j2 dest=/etc/collectd/collectd.conf owner=root group=root mode=0444
+      register: collectd
+    - name: Restart collectd
+      service: name=collectd state=restarted
+      when: collectd.changed
     - name: configure rc.local 1st
       lineinfile: dest=/etc/rc.local line="{{ item }}" state=present
       with_items: system_startup
