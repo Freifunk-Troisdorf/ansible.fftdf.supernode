@@ -13,7 +13,7 @@ communitynetworkv6="fda0:747e:ab29:7405:255::"
 # Third octet from the server range
 octet3rd="255"
 # CIDR muss /16 sein
-localserver=$(hostname)
+localserver=$(/bin/hostname)
 
 for i in $server; do
 
@@ -21,12 +21,12 @@ for i in $server; do
         for j in $server; do
 
                 if [ $i  != $j ]; then
-                        if [ $i = $(hostname) ]; then
-                                 ip link add $j type gretap local $(hostname  -I | cut -f1 -d' ') remote $(dig +short $j.$domain) dev eth0 nopmtudisc
-                                 ip link set dev $j mtu $mtu
-                                 ip link set address $communitymacaddress:${i#$communityname}${j#$communityname} dev $j
-                                 ip link set $j up
-                                 batctl if add $j
+                        if [ $i = $(/bin/hostname) ]; then
+                                 /sbin/ip link add $j type gretap local $(/bin/hostname  -I | /usr/bin/cut -f1 -d' ') remote $(/usr/bin/dig +short $j.$domain) dev eth0 nopmtudisc
+                                 /sbin/ip link set dev $j mtu $mtu
+                                 /sbin/ip link set address $communitymacaddress:${i#$communityname}${j#$communityname} dev $j
+                                 /sbin/ip link set $j up
+                                 /usr/sbin/batctl if add $j
                         fi
                 fi
 
@@ -36,10 +36,10 @@ for i in $server; do
 done
 
 # configure bat0
-ip link set address $communitymacaddress$:0${localserver#$communityname} dev bat0
-ip link set up dev bat0
-ip addr add $communitynetwork.$octet3rd.${localserver#$communityname}/16 broadcast $communitynetwork.255.255 dev bat0
-ip -6 addr add fda0:747e:ab29:7405:255::${localserver#$communityname}/64 dev bat0
-alfred -i bat0 > /dev/null 2>&1 &
-batadv-vis -i bat0 -s > /dev/null 2>&1 &
-service bind9 restart
+/sbin/ip link set address $communitymacaddress$:0${localserver#$communityname} dev bat0
+/sbin/ip link set up dev bat0
+/sbin/ip addr add $communitynetwork.$octet3rd.${localserver#$communityname}/16 broadcast $communitynetwork.255.255 dev bat0
+/sbin/ip -6 addr add fda0:747e:ab29:7405:255::${localserver#$communityname}/64 dev bat0
+/usr/sbin/alfred -i bat0 > /dev/null 2>&1 &
+/usr/sbin/batadv-vis -i bat0 -s > /dev/null 2>&1 &
+/usr/sbin/service bind9 restart

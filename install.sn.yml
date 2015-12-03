@@ -63,22 +63,6 @@
       - keepalive.sh
     backbone_script:
       - gre_backbone.sh
-    system_startup:
-      - "# Routing einschalten"
-      - /sbin/sysctl -w net.ipv6.conf.all.forwarding=1
-      - /sbin/sysctl -w net.ipv4.ip_forward=1
-#      - "# Routing Tabelle 42 fuer Freifunk anlegen, wenn noch nicht vorhanden"
-#      - #/bin/grep 42 /etc/iproute2/rt_tables || echo '42 42' >> /etc/iproute2/rt_tables"
-#      - "# Freifunk Daten sollen mit 0x1 markiert werden"
-#      - /sbin/iptables -t mangle -A PREROUTING -i bat0 -j MARK --set-xmark 0x1
-#      - "# Erstmal unreachable melden, ausser OpenVPN ist aufgebaut"
-#      - "#/sbin/ip route add unreachable default table 42"
-#      - "# Alles was mit 0x1 markiert ist soll nach Routing Tabelle 42 behandelt werden"
-#      - "/sbin/ip rule add from all fwmark 0x1 table 42 priority 4"
-      - "#NAT auf eth0 aktivieren"
-      - /sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-      - "#GRE Backbone aufbauen"
-      - /opt/freifunk/gre_backbone.sh
     authorized_keys:
       - authorized_keys
 
@@ -103,14 +87,13 @@
       when: ansible_default_ipv6.address is defined
     - name: set hostname
       hostname: name='{{ sn_hostname }}'
-      register: hostname
+      register: sethostname
     - name: Reboot the server
       shell: sleep 2 && shutdown -r now "Ansible updates triggered"
       async: 1
       poll: 0
       ignore_errors: true
-      when: hosts.changed
-      when: hostname.changed
+      when: sethostname.changed
     - name: disable multi CPU Kernel (SMP)
       lineinfile: dest=/etc/default/grub regexp='^GRUB_CMDLINE_LINUX_DEFAULT=' line='GRUB_CMDLINE_LINUX_DEFAULT="quiet maxcpus=0 nosmp"' state=present
       register: grubnosmp
@@ -125,7 +108,7 @@
                    delay=15
                    timeout=300
       when: hosts.changed
-      when: hostname.changed
+      when: sethostname.changed
     - name: Install common required packages
       apt: state=installed pkg={{ item }}
       with_items: common_required_packages
@@ -205,6 +188,10 @@
       when: check_gw.changed
     - name: Copy dhcpd template file
       template: src=./files/dhcpd.conf.j2 dest=/etc/dhcp/dhcpd.conf owner=root group=root mode=0444
+    - name: Add cron backbone script
+      cron: name=backbone special_time=reboot job="/opt/freifunk/gre_backbone.sh"
+    - name: Add cron startup script
+      cron: name=startup special_time=reboot job="/opt/freifunk/sn_startup.sh"
     - name: Copy backbone script
       copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
       with_items: backbone_script
@@ -214,16 +201,8 @@
     - name: Restart collectd
       service: name=collectd state=restarted
       when: collectd.changed
-    - name: configure rc.local 1st
-      lineinfile: dest=/etc/rc.local line="{{ item }}" state=present
-      with_items: system_startup
-      register: rc
-    - name: configure rc.local 2nd
-      lineinfile: dest=/etc/rc.local line="exit 0" state=absent
-      when: rc.changed
-    - name: configure rc.local 3rd
-      lineinfile: dest=/etc/rc.local line="exit 0" state=present
-      when: rc.changed
+    - name: configure startup script
+      template: src=./files/sn_startup.sh.j2 dest=/opt/freifunk/sn_startup.sh owner=root group=root mode=0500
     - name: SSH authorized_keys
       copy: src=./files/{{ item }} dest=/root/.ssh owner=root group=root mode=0400
       with_items: authorized_keys
@@ -252,3 +231,11 @@
       template: src=./files/alfred.sh.j2 dest=/opt/freifunk/alfred.sh owner=root group=root mode=0544
     - name: Add cron job with alfred info script
       cron: name=alfred_info job="/opt/freifunk/alfred.sh > /dev/null 2>&1" user="root"
+    - name: Send notification message via Slack
+      local_action:
+        module: slack
+        token: 
+        msg: "{{ inventory_hostname }} completed"
+        channel: "#technik"
+        username: "Ansible on {{ inventory_hostname }}"
+        parse: 'none'
