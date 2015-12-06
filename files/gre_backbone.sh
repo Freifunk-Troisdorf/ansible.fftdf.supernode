@@ -40,6 +40,6 @@ done
 /sbin/ip link set up dev bat0
 /sbin/ip addr add $communitynetwork.$octet3rd.${localserver#$communityname}/16 broadcast $communitynetwork.255.255 dev bat0
 /sbin/ip -6 addr add fda0:747e:ab29:7405:255::${localserver#$communityname}/64 dev bat0
-/usr/sbin/alfred -i bat0 > /dev/null 2>&1 &
+/usr/local/sbin/alfred -i bat0 > /dev/null 2>&1 &
 /usr/sbin/batadv-vis -i bat0 -s > /dev/null 2>&1 &
 /usr/sbin/service bind9 restart
