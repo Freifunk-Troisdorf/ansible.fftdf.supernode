@@ -1,7 +1,7 @@
 #!/bin/sh
 # Server name ending must be a single digit number
 communityname="troisdorf"
-server="troisdorf1 troisdorf2 troisdorf3 troisdorf4 troisdorf5 troisdorf6"
+server="troisdorf1 troisdorf2 troisdorf3 troisdorf4 troisdorf5 troisdorf6 troisdorf9"
 domain="freifunk-troisdorf.de"
 mtu=1500
 # community MAC address, without the last Byte (:)!

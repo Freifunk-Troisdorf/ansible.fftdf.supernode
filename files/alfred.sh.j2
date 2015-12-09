@@ -2,7 +2,7 @@
 
 release=$(/bin/uname -r)
 nodeid=$( /bin/echo {{ sn_mesh_MAC }} | /bin/sed s/://g)
-meshh_if=$(/bin/cat /sys/class/net/*/address | /bin/grep -v ^00:00:00)
+meshh_if=$(/bin/cat /sys/class/net/troisdorf*/address | /bin/grep -v ^00:00:00)
 tempfile=/tmp/alfred_info
 
 if [ -f $tempfile ]
