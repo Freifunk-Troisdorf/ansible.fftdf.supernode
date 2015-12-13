@@ -1,6 +1,7 @@
 # First install ssh-key at remote computer
 # In case of python error start:
 # ansible troisdorf4 -u root -m raw -a "apt-get update && apt-get install python -y"
+# Version 1.0
 
 - name: Install Freifunk Troisdorf super node
 #  hosts: FreifunkSupernodesL2TP
