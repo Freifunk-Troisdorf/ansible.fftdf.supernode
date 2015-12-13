@@ -19,7 +19,6 @@
       - libnl-3-dev
       - libjansson-dev
       - isc-dhcp-server
-#      - openvpn
       - collectd
       - libcap-dev
       - iproute
@@ -53,15 +52,6 @@
       - tunneldigger.service
     bind_zone_fftdf:
       - named.conf.fftdf
-#    openvpn_files:
-#      - mullvad_linux.conf
-#      - mullvad.key
-#      - mullvad.crt
-#      - ca.crt
-#      - crl.pem
-#    openvpn_scripts:
-#      - up.sh
-#      - down.sh
     check_gw_script:
       - keepalive.sh
     backbone_script:
@@ -94,18 +84,18 @@
     - name: set hostname
       hostname: name='{{ sn_hostname }}'
       register: sethostname
-    - name: Reboot the server
-      shell: sleep 2 && shutdown -r now "Ansible updates triggered"
-      async: 1
-      poll: 0
-      ignore_errors: true
-      when: sethostname.changed
     - name: disable multi CPU Kernel (SMP)
       lineinfile: dest=/etc/default/grub regexp='^GRUB_CMDLINE_LINUX_DEFAULT=' line='GRUB_CMDLINE_LINUX_DEFAULT="quiet maxcpus=0 nosmp"' state=present
       register: grubnosmp
     - name: Update grub
       shell: update-grub2
       when: grubnosmp.changed
+    - name: Reboot the server
+      shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+      async: 1
+      poll: 0
+      ignore_errors: true
+      when: sethostname.changed
     - name: waiting for server to come back
       local_action:
                    wait_for
@@ -120,10 +110,6 @@
       apt: state=installed pkg={{ item }}
       with_items: common_required_packages
       register: aptupdates
-#    - name: Install Linux headers
-#      shell: >
-#        apt-get install linux-headers-$(uname -r) -y
-#      when: aptupdates.changed
     - name: Add modules
       lineinfile: dest=/etc/modules line={{ item }}
       with_items: modules_required
@@ -132,7 +118,6 @@
       modprobe: name={{ item }}
       with_items: modules_required
       when: modules_req.changed
-
     - name: Install Linux headers
       shell: >
         apt-get install linux-headers-$(uname -r) -y
@@ -161,7 +146,6 @@
     - name: Install alfred
       shell: cd /tmp/alfred && git checkout master && make && make install
       when: getalfred.changed
-
     - name: Get Tunneldigger
       git: repo=https://github.com/wlanslovenija/tunneldigger.git
            dest=/srv/tunneldigger
@@ -198,13 +182,6 @@
     - name: Copy logrotate config
       copy: src=./files/{{ item }} dest=/etc/ owner=root group=root mode=0500
       with_items: logrotate_config
-#    - name: copy openvpn files
-#      copy: src=./files/{{ item }} dest=/etc/openvpn owner=root group=root mode=0400
-#      with_items: openvpn_files
-#    - name: copy openvpn scripts
-#      copy: src=./files/{{ item }} dest=/etc/openvpn owner=root group=root mode=0500
-#      with_items: openvpn_scripts
-
     - name: Create freifunk directory
       file: path=/opt/freifunk state=directory mode=0755
     - name: Check gateway / keepalive script
