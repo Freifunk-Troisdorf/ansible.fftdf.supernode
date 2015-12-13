@@ -14,6 +14,10 @@ communitynetworkv6="fda0:747e:ab29:7405:255::"
 octet3rd="255"
 # CIDR muss /16 sein
 localserver=$(/bin/hostname)
+# files
+batadv=/usr/local/sbin/batadv-vis
+alfred=/usr/local/sbin/alfred
+batctl=/usr/local/sbin/batctl
 
 for i in $server; do
 
@@ -26,7 +30,7 @@ for i in $server; do
                                  /sbin/ip link set dev $j mtu $mtu
                                  /sbin/ip link set address $communitymacaddress:${i#$communityname}${j#$communityname} dev $j
                                  /sbin/ip link set $j up
-                                 /usr/sbin/batctl if add $j
+                                 $batctl if add $j
                         fi
                 fi
 
@@ -40,6 +44,11 @@ done
 /sbin/ip link set up dev bat0
 /sbin/ip addr add $communitynetwork.$octet3rd.${localserver#$communityname}/16 broadcast $communitynetwork.255.255 dev bat0
 /sbin/ip -6 addr add fda0:747e:ab29:7405:255::${localserver#$communityname}/64 dev bat0
-/usr/local/sbin/alfred -i bat0 > /dev/null 2>&1 &
-/usr/sbin/batadv-vis -i bat0 -s > /dev/null 2>&1 &
+
+/usr/bin/killall alfred
+/usr/bin/killall batadv-vis
+/bin/sleep 5
+$alfred -i bat0 > /dev/null 2>&1 &
+/bin/sleep 15
+$batadv -i bat0 -s > /dev/null 2>&1 &
 /usr/sbin/service bind9 restart
