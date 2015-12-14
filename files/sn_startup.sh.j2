@@ -3,7 +3,7 @@
 curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
 
 # Stop tunneldigger until bat0 is up
-#/usr/sbin/service tunneldigger stop
+/usr/sbin/service tunneldigger stop
 
 # Set unreachable for table 200
 #/bin/ip route add unreachable 0.0.0.0/0 table iffy
@@ -38,10 +38,15 @@ curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted",
 # Set gateway for table 200
 #/bin/ip route replace default via {{ sn_iffy_traffic }} table iffy
 
+sleep 5
+
 # Start tunneldigger
 /usr/sbin/service tunneldigger restart
 
 # radvd restart
 /usr/sbin/service radvd restart
+
+# restart DHCP
+/usr/sbin/service isc-dhcp-server restart
 
 exit 0

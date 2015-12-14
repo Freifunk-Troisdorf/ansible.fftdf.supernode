@@ -55,8 +55,6 @@
       - named.conf.fftdf
     check_gw_script:
       - keepalive.sh
-    backbone_script:
-      - gre_backbone.sh
     authorized_keys:
       - authorized_keys
     logrotate_config:
@@ -199,8 +197,7 @@
     - name: Add cron startup script
       cron: name=startup special_time=reboot job="/opt/freifunk/sn_startup.sh"
     - name: Copy backbone script
-      copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
-      with_items: backbone_script
+      template: src=./files/gre_backbone.sh.j2 dest=/opt/freifunk/gre_backbone.sh owner=root group=root mode=0544
     - name: Collectd template file
       template: src=./files/collectd.conf.j2 dest=/etc/collectd/collectd.conf owner=root group=root mode=0444
       register: collectd
@@ -235,10 +232,6 @@
                    delay=15
                    timeout=300
       when: tunneldigger.changed
-    - name: Alfed message
-      template: src=./files/alfred.sh.j2 dest=/opt/freifunk/alfred.sh owner=root group=root mode=0544
-    - name: Add cron job with alfred info script
-      cron: name=alfred_info job="/opt/freifunk/alfred.sh > /dev/null 2>&1" user="root"
     - name: Send notification message via Slack
       local_action:
         module: slack
