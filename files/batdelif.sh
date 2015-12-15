@@ -1,4 +1,4 @@
 #!/bin/bash
 INTERFACE="$3"
 
-/usr/sbin/batctl if del $INTERFACE
+/usr/local/sbin/batctl if del $INTERFACE

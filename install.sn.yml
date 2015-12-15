@@ -134,8 +134,8 @@
       when: aptupdates.changed
       register: getbatctl
     - name: Install batctl
-      shell: cd /tmp/batctl && git checkout master && make && make install
-#      shell: cd /tmp/batctl && git checkout v2014.3.0 && make && make install
+#      shell: cd /tmp/batctl && git checkout master && make && make install
+      shell: cd /tmp/batctl && git checkout v2015.2 && make && make install
       when: getbatctl.changed
     - name: Get alfred
       git: repo=http://git.open-mesh.org/alfred.git
