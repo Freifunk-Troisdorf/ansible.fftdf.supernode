@@ -29,7 +29,6 @@
       - ebtables
       - python-virtualenv
       - iptables-persistent
-#      - batctl
       - iftop
       - screen
       - bridge-utils
@@ -70,9 +69,9 @@
       apt_repository: repo='deb http://http.debian.net/debian jessie-backports main' state=present 
     - name: Update apt cache
       apt: update_cache=yes
-    - name: Install new kernel
-      apt: name=linux-image-4.2.0-0.bpo.1-amd64 state=present
-      register: kernel4
+#    - name: Install new kernel
+#      apt: name=linux-image-4.2.0-0.bpo.1-amd64 state=present
+#      register: kernel4
     - name: Gathering facts
       setup:
     - name: Set IPv4 in hostfile
@@ -136,6 +135,7 @@
       register: getbatctl
     - name: Install batctl
       shell: cd /tmp/batctl && git checkout master && make && make install
+#      shell: cd /tmp/batctl && git checkout v2014.3.0 && make && make install
       when: getbatctl.changed
     - name: Get alfred
       git: repo=http://git.open-mesh.org/alfred.git
@@ -236,7 +236,7 @@
       local_action:
         module: slack
         token: "{{ slack_token }}"
-        msg: "{{ inventory_hostname }} completed"
+        msg: "{{ inventory_hostname }} completed with branch testing"
         channel: "#technik"
         username: "Ansible on {{ inventory_hostname }}"
         parse: 'none'
