@@ -238,11 +238,11 @@
                    delay=15
                    timeout=300
       when: tunneldigger.changed
-#    - name: Send notification message via Slack
-#      local_action:
-#        module: slack
-#        token: "{{ slack_token }}"
-#        msg: "{{ inventory_hostname }} completed with branch testing"
-#        channel: "#technik"
-#        username: "Ansible on {{ inventory_hostname }}"
-#        parse: 'none'
+    - name: Send notification message via Slack
+      local_action:
+        module: slack
+        token: "{{ slack_token }}"
+        msg: "{{ inventory_hostname }} completed with branch testing"
+        channel: "#technik"
+        username: "Ansible on {{ inventory_hostname }}"
+        parse: 'none'
