@@ -21,8 +21,10 @@ batctl=/usr/local/sbin/batctl
 #done
 
 #ip link set address {{ sn_mesh_MAC }} dev $INTERFACE
-ifconfig $INTERFACE hw ether {{ sn_mesh_MAC }}
+#ifconfig $INTERFACE hw ether {{ sn_mesh_MAC }}
 /bin/ip link set dev $INTERFACE up mtu 1312
-/sbin/sysctl net.ipv4.conf.$INTERFACE.rp_filter=0
+#/sbin/sysctl net.ipv4.conf.$INTERFACE.rp_filter=0
+
 $batctl if add $INTERFACE
 
+echo "enabled" > /sys/devices/virtual/net/$INTERFACE/batman_adv/no_rebroadcast
