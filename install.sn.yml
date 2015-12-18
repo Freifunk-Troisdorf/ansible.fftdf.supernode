@@ -10,6 +10,7 @@
   user: root
   gather_facts: False
   vars:
+    snversion: testing_v1.0
     common_required_packages:
       - git
       - make
@@ -230,6 +231,8 @@
       poll: 0
       ignore_errors: true
       when: tunneldigger.changed
+    - name: Wirte version information
+      shell: touch /etc/sn_version && echo {{ snversion }} > /etc/sn_version
     - name: waiting for server to come back
       local_action:
                    wait_for
