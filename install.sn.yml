@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: testing_v1.1
+    snversion: master_v1.2
     common_required_packages:
       - git
       - make
@@ -69,9 +69,6 @@
       apt_repository: repo='deb http://http.debian.net/debian jessie-backports main' state=present 
     - name: Update apt cache
       apt: update_cache=yes
-#    - name: Install new kernel
-#      apt: name=linux-image-4.2.0-0.bpo.1-amd64 state=present
-#      register: kernel4
     - name: Gathering facts
       setup:
     - name: Set IPv4 in hostfile
@@ -217,12 +214,10 @@
       template: src=./files/named.conf.options.j2 dest=/etc/bind/named.conf.options owner=root group=bind mode=644
     - name: Copy radvd config template
       template: src=./files/radvd.conf.j2 dest=/etc/radvd.conf owner=radvd group=root mode=0444
-
     - name: Alfed message
       template: src=./files/alfred.sh.j2 dest=/opt/freifunk/alfred.sh owner=root group=root mode=0544
     - name: Add cron job with alfred info script
       cron: name=alfred_info job="/opt/freifunk/alfred.sh > /dev/null 2>&1" user="root"
-
     - name: Reboot the server finally
       shell: sleep 2 && shutdown -r now "Ansible updates triggered"
       async: 1
