@@ -1,7 +1,6 @@
 # First install ssh-key at remote computer
 # In case of python error start:
 # ansible troisdorf4 -u root -m raw -a "apt-get update && apt-get install python -y"
-# Version 1.0
 
 - name: Install Freifunk Troisdorf super node
 #  hosts: FreifunkSupernodesL2TP
@@ -10,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: testing_v1.0
+    snversion: testing_v1.1
     common_required_packages:
       - git
       - make
@@ -135,8 +134,7 @@
       when: aptupdates.changed
       register: getbatctl
     - name: Install batctl
-#      shell: cd /tmp/batctl && git checkout master && make && make install
-      shell: cd /tmp/batctl && git checkout v2015.2 && make && make install
+      shell: cd /tmp/batctl && git checkout v2015.1 && make && make install
       when: getbatctl.changed
     - name: Get alfred
       git: repo=http://git.open-mesh.org/alfred.git
