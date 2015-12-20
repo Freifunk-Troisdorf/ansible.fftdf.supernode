@@ -54,3 +54,4 @@ $ip -6 addr add $communitynetworkv6${localserver#$communityname}/64 dev bat0
 $alfred -i bat0 > /dev/null 2>&1 &
 /bin/sleep 15
 $batadv -i bat0 -s > /dev/null 2>&1 &
+/usr/sbin/service bind9 restart
