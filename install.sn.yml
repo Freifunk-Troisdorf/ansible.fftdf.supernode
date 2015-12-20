@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v1.2
+    snversion: master_v1.4
     common_required_packages:
       - git
       - make
@@ -37,6 +37,8 @@
       - radvd
       - curl
       - htop
+      - psmisc
+      - dnsutils
     modules_required:
       - batman-adv
       - nf_conntrack_netlink
@@ -189,11 +191,11 @@
     - name: Copy dhcpd template file
       template: src=./files/dhcpd.conf.j2 dest=/etc/dhcp/dhcpd.conf owner=root group=root mode=0444
     - name: Add cron backbone script
-      cron: name=backbone special_time=reboot job="/opt/freifunk/gre_backbone.sh"
+      cron: name=backbone special_time=reboot job="/opt/freifunk/l2tp_backbone.sh"
     - name: Add cron startup script
       cron: name=startup special_time=reboot job="/opt/freifunk/sn_startup.sh"
     - name: Copy backbone script
-      template: src=./files/gre_backbone.sh.j2 dest=/opt/freifunk/gre_backbone.sh owner=root group=root mode=0544
+      template: src=./files/l2tp_backbone.sh.j2 dest=/opt/freifunk/l2tp_backbone.sh owner=root group=root mode=0544
     - name: Collectd template file
       template: src=./files/collectd.conf.j2 dest=/etc/collectd/collectd.conf owner=root group=root mode=0444
       register: collectd
@@ -238,7 +240,7 @@
       local_action:
         module: slack
         token: "{{ slack_token }}"
-        msg: "{{ inventory_hostname }} completed with branch testing"
+        msg: "{{ inventory_hostname }} completed with {{ snversion }}"
         channel: "#technik"
         username: "Ansible on {{ inventory_hostname }}"
         parse: 'none'
