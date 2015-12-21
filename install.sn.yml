@@ -152,7 +152,7 @@
            dest=/srv/tunneldigger
       register: tunneldigger
       when: aptupdates.changed
-      when: ffswitch is undefined
+#      when: ffswitch is undefined
     - name: Configure tunneldigger
       command: "{{item}}"
       with_items:
@@ -190,25 +190,25 @@
       copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
       with_items: check_gw_script
       register: check_gw
-      when: ffswitch is undefined
+#      when: ffswitch is undefined
     - name: Add cron job with check gateway script
       cron: name=check_gw job="/opt/freifunk/keepalive.sh > /dev/null 2>&1" user="root" 
       when: check_gw.changed
-      when: ffswitch is undefined
+#      when: ffswitch is undefined
     - name: Copy dhcpd template file
       template: src=./files/dhcpd.conf.j2 dest=/etc/dhcp/dhcpd.conf owner=root group=root mode=0444
-      when: ffswitch is undefined
+#      when: ffswitch is undefined
     - name: Add cron backbone script
       cron: name=backbone special_time=reboot job="/opt/freifunk/l2tp_backbone.sh"
     - name: Add cron startup script
       cron: name=startup special_time=reboot job="/opt/freifunk/sn_startup.sh"
     - name: Copy backbone script
       template: src=./files/l2tp_backbone.sh.j2 dest=/opt/freifunk/l2tp_backbone.sh owner=root group=root mode=0544
-      when: ffswitch is undefined
-    - name: Copy backbone script
-      template: src=./files/l2tp_backbone_ffswitch.sh.j2 dest=/opt/freifunk/l2tp_backbone.sh owner=root group=root mode=0544
-      when: ffswitch is defined
-      register: ffswitchl2tp
+#      when: ffswitch is undefined
+#    - name: Copy backbone script
+#      template: src=./files/l2tp_backbone_ffswitch.sh.j2 dest=/opt/freifunk/l2tp_backbone.sh owner=root group=root mode=0544
+#      when: ffswitch is defined
+#      register: ffswitchl2tp
     - name: Collectd template file
       template: src=./files/collectd.conf.j2 dest=/etc/collectd/collectd.conf owner=root group=root mode=0444
       register: collectd
@@ -223,16 +223,16 @@
     - name: Copy secondary zone file
       copy: src=./files/{{ item }} dest=/etc/bind owner=root group=bind mode=644
       with_items: bind_zone_fftdf
-      when: ffswitch is undefined
+#      when: ffswitch is undefined
     - name: Bind9, activate fftdf zone
       lineinfile: dest=/etc/bind/named.conf line='include "/etc/bind/named.conf.fftdf";' state=present
-      when: ffswitch is undefined
+#      when: ffswitch is undefined
     - name: Copy option template
       template: src=./files/named.conf.options.j2 dest=/etc/bind/named.conf.options owner=root group=bind mode=644
-      when: ffswitch is undefined
+#      when: ffswitch is undefined
     - name: Copy radvd config template
       template: src=./files/radvd.conf.j2 dest=/etc/radvd.conf owner=radvd group=root mode=0444
-      when: ffswitch is undefined
+#      when: ffswitch is undefined
     - name: Alfed message
       template: src=./files/alfred.sh.j2 dest=/opt/freifunk/alfred.sh owner=root group=root mode=0544
     - name: Add cron job with alfred info script
@@ -243,7 +243,7 @@
       poll: 0
       ignore_errors: true
       when: tunneldigger.changed
-      when: ffswitchl2tp.changed
+#      when: ffswitchl2tp.changed
     - name: Wirte version information
       shell: touch /etc/sn_version && echo {{ snversion }} > /etc/sn_version
     - name: waiting for server to come back
