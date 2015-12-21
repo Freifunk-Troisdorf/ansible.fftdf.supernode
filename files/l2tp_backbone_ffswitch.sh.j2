@@ -2,8 +2,8 @@
 # Version 5
 # Der servername muss mit einer einstelligen Zahl aufhoeren!!!!!
 communityname="troisdorf"
-#server="troisdorf0 troisdorf1 troisdorf2 troisdorf3 troisdorf4 troisdorf5 troisdorf6 troisdorf7 troisdorf8 troisdorf9"
-server="troisdorf0 {{ sn_hostname }}"
+server="troisdorf0 troisdorf1 troisdorf2 troisdorf3 troisdorf4 troisdorf5 troisdorf6 troisdorf7 troisdorf8 troisdorf9"
+#server="troisdorf0 {{ sn_hostname }}"
 domain="freifunk-troisdorf.de"
 mtu=1400
 # community MAC address, without the last Byte (:)!
@@ -54,4 +54,3 @@ $ip -6 addr add $communitynetworkv6${localserver#$communityname}/64 dev bat0
 $alfred -i bat0 > /dev/null 2>&1 &
 /bin/sleep 15
 $batadv -i bat0 -s > /dev/null 2>&1 &
-/usr/sbin/service bind9 restart
