@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v1.8.3
+    snversion: master_v1.8.4
     batmanversion: v2015.2
     common_required_packages:
       - git
@@ -199,6 +199,7 @@
     - name: Restart dhcpd
       service: name=isc-dhcp-server state=restarted
       when: dhcpd.changed
+      ignore_errors: yes
     - name: Add cron backbone script
       cron: name=backbone special_time=reboot job="/opt/freifunk/l2tp_backbone.sh"
     - name: Add cron startup script
