@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v1.8.4
+    snversion: master_v1.9.0
     batmanversion: v2015.2
     common_required_packages:
       - git
@@ -149,7 +149,8 @@
       shell: cd /tmp/alfred && git checkout {{ batmanversion }} && make && make install
       when: getalfred.changed
     - name: Get Tunneldigger
-      git: repo=https://github.com/wlanslovenija/tunneldigger.git
+#      git: repo=https://github.com/wlanslovenija/tunneldigger.git
+      git: repo=https://github.com/ffrl/tunneldigger.git
            dest=/srv/tunneldigger
       register: tunneldigger
       when: aptupdates.changed
