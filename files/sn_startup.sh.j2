@@ -13,6 +13,11 @@ curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted",
 #    sleep 5
 #done
 
+# Block RFC1918 and APIPA destination via WAN
+/sbin/iptables -P OUTPUT ACCEPT
+for i in 10.0.0.0/8 172.16.0.0/12 169.254.0.0/16 192.168.0.0/16; do
+/sbin/iptables -A OUTPUT -o eth0 -d $i -j DROP
+done
 
 # Activate IP forwarding
 /sbin/sysctl -w net.ipv6.conf.all.forwarding=1
@@ -33,7 +38,7 @@ curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted",
 /sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
 # Allow MAC address spoofing
-#/sbin/sysctl net.ipv4.conf.bat0.rp_filter=0
+/sbin/sysctl net.ipv4.conf.bat0.rp_filter=0
 
 # Set gateway for table 200
 #/bin/ip route replace default via {{ sn_iffy_traffic }} table iffy
