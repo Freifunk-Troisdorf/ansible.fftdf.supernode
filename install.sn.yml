@@ -110,7 +110,7 @@
       with_items: common_required_packages
       register: aptupdates
     - name: Set clock
-      shell: ntpd -q -g
+      shell: /etc/init.d/ntp stop && /usr/sbin/ntpd -q -g && /etc/init.d/ntp start
     - name: Add modules
       lineinfile: dest=/etc/modules line={{ item }}
       with_items: modules_required
