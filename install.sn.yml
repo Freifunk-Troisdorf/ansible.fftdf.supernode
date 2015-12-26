@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v1.9.1
+    snversion: master_v1.9.3
     batmanversion: v2015.2
     common_required_packages:
       - git
@@ -40,6 +40,7 @@
       - htop
       - psmisc
       - dnsutils
+      - ntp
     modules_required:
       - batman-adv
       - nf_conntrack_netlink
@@ -108,6 +109,8 @@
       apt: state=installed pkg={{ item }}
       with_items: common_required_packages
       register: aptupdates
+    - name: Set clock
+      shell: ntpd -q -g
     - name: Add modules
       lineinfile: dest=/etc/modules line={{ item }}
       with_items: modules_required
@@ -197,6 +200,15 @@
     - name: Copy dhcpd template file
       template: src=./files/dhcpd.conf.j2 dest=/etc/dhcp/dhcpd.conf owner=root group=root mode=0444
       register: dhcpd
+
+    - name: Clone static DHCP config
+      git: repo=https://github.com/Freifunk-Troisdorf/static-dhcp
+           dest=/opt/freifunk/static-dhcp
+      when: dhcpd.changed 
+    - name: Add cron static DHCP
+      cron: name=StaticDHCP minute="*" job="/opt/freifunk/static-dhcp/dhcp-update.sh"
+      when: dhcpd.changed
+
     - name: Restart dhcpd
       service: name=isc-dhcp-server state=restarted
       when: dhcpd.changed

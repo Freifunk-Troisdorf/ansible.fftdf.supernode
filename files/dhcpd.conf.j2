@@ -11,8 +11,4 @@ option domain-name-servers {{ sn_mesh_IPv4 }}, {{ sn_dhcp_dns }};
 option routers {{ sn_dhcp_router }};
 interface bat0;
 }
-host database {
-  hardware ethernet 5e:51:68:d6:6a:69;
-  fixed-address 10.188.1.27;
-}
-
+include "/opt/freifunk/static-dhcp/static.conf";
