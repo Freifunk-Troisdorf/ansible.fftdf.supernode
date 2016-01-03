@@ -1,0 +1,57 @@
+#!/bin/sh
+
+curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
+
+# Stop tunneldigger until bat0 is up
+/usr/sbin/service tunneldigger stop
+
+# Set unreachable for table 200
+#/bin/ip route add unreachable 0.0.0.0/0 table iffy
+
+#while ! ping -c 1 -W 1 {{ sn_iffy_traffic }}; do
+#    echo "Waiting for {{ sn_iffy_traffic }} - network interface might be down..."
+#    sleep 5
+#done
+
+# Block RFC1918 and APIPA destination via WAN
+/sbin/iptables -P OUTPUT ACCEPT
+for i in 10.0.0.0/8 172.16.0.0/12 169.254.0.0/16 192.168.0.0/16; do
+/sbin/iptables -A OUTPUT -o eth0 -d $i -j DROP
+done
+
+# Activate IP forwarding
+/sbin/sysctl -w net.ipv6.conf.all.forwarding=1
+/sbin/sysctl -w net.ipv4.ip_forward=1
+/sbin/sysctl kernel.panic=1
+
+# Routing table 200 for traffic above port 1023
+#/bin/grep 200 /etc/iproute2/rt_tables || /bin/echo 200	iffy >> /etc/iproute2/rt_tables
+
+# Set table for traffice with mark 4
+#/bin/ip rule add fwmark 0x4 table iffy
+
+# Set mark 4 to traffic above port 1023
+#/sbin/iptables -t mangle -A PREROUTING -p tcp --dport 1024:65535 -s 10.0.0.0/8 ! -d 10.0.0.0/8 -j MARK --set-mark 4
+#/sbin/iptables -t mangle -A PREROUTING -p udp --dport 1024:65535 -s 10.0.0.0/8 ! -d 10.0.0.0/8 -j MARK --set-mark 4
+
+# NAT on eth0
+/sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+# Allow MAC address spoofing
+/sbin/sysctl net.ipv4.conf.bat0.rp_filter=0
+
+# Set gateway for table 200
+#/bin/ip route replace default via {{ sn_iffy_traffic }} table iffy
+
+sleep 5
+
+# Start tunneldigger
+/usr/sbin/service tunneldigger restart
+
+# radvd restart
+/usr/sbin/service radvd restart
+
+# restart DHCP
+/usr/sbin/service isc-dhcp-server restart
+
+exit 0

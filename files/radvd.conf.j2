@@ -1,0 +1,12 @@
+interface bat0 {
+        AdvSendAdvert on;
+        IgnoreIfMissing on;
+        MaxRtrAdvInterval 200;
+        RDNSS {{ sn_mesh_IPv6 }} {};
+        prefix fda0:747e:ab29:7405::/64 {
+                AdvOnLink on;
+                AdvAutonomous on;
+                AdvRouterAddr on;
+        };
+};
+

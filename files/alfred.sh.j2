@@ -2,7 +2,8 @@
 
 release=$(/bin/uname -r)
 nodeid=$( /bin/echo {{ sn_mesh_MAC }} | /bin/sed s/://g)
-meshh_if=$(/bin/cat /sys/class/net/*/address | /bin/grep -v ^00:00:00)
+#meshh_if=$(/bin/cat /sys/class/net/troisdorf*/address | /bin/grep -v ^00:00:00)
+meshh_if=$(/bin/cat /sys/class/net/l2tp*/address | /bin/grep -v ^00:00:00)
 tempfile=/tmp/alfred_info
 
 if [ -f $tempfile ]
@@ -20,6 +21,7 @@ fi
 ],
 "mesh_interfaces": [
 $(for i in $meshh_if; do /bin/echo '"'$i'",';done)
+"{{ ul_mesh_MAC }}",
 "{{ sn_mesh_MAC }}"
 ]
 },
@@ -37,7 +39,7 @@ EOF
 
 if [ -f $tempfile ]
  then
-  /bin/cat "$tempfile" | /bin/gzip | /usr/sbin/alfred -s 158
+  /bin/cat "$tempfile" | /bin/gzip | /usr/local/sbin/alfred -s 158
 fi
 
 if [ -f $tempfile ]
@@ -46,3 +48,4 @@ if [ -f $tempfile ]
 fi
 
 exit 0
+

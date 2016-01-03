@@ -2,7 +2,7 @@
 INTERFACE="$3"
 #MAC="$8"
 #BLACKLISTFILE=/opt/freifunk/blockliste.txt
-
+batctl=/usr/local/sbin/batctl
 
 #if [ -f /opt/freifunk/blockliste.txt ] 
 
@@ -21,7 +21,10 @@ INTERFACE="$3"
 #done
 
 #ip link set address {{ sn_mesh_MAC }} dev $INTERFACE
-ifconfig $INTERFACE hw ether {{ sn_mesh_MAC }}
-ip link set dev $INTERFACE up mtu 1312
-/usr/sbin/batctl if add $INTERFACE
+#ifconfig $INTERFACE hw ether {{ sn_mesh_MAC }}
+/bin/ip link set dev $INTERFACE up mtu 1312
+#/sbin/sysctl net.ipv4.conf.$INTERFACE.rp_filter=0
 
+$batctl if add $INTERFACE
+
+echo "enabled" > /sys/devices/virtual/net/$INTERFACE/batman_adv/no_rebroadcast
