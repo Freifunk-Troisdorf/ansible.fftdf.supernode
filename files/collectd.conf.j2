@@ -12,7 +12,7 @@ Hostname "{{ sn_hostname }}"
 FQDNLookup true
 BaseDir "/var/lib/collectd"
 PluginDir "/usr/lib/collectd"
-Interval 100
+Interval 60
 Timeout 2
 ReadThreads 5
 
@@ -51,7 +51,7 @@ LoadPlugin snmp
                 Version 1
                 Community "public"
                 Collect "std_traffic"
-                Interval 120
+                Interval 60
         </Host>
 </Plugin>
 
