@@ -23,10 +23,9 @@ LoadPlugin cpu
 LoadPlugin load
 LoadPlugin memory
 LoadPlugin processes
-LoadPlugin rrdtool
 LoadPlugin users
-LoadPlugin snmp
-
+LoadPlugin uptime
+LoadPlugin interface
 
 <Plugin write_graphite>
         <Carbon>
@@ -39,24 +38,10 @@ LoadPlugin snmp
         </Carbon>
 </Plugin>
 
-<Plugin snmp>
-        <Data "std_traffic">
-                Type "if_octets"
-                Table true
-                Instance "IF-MIB::ifDescr"
-                Values "IF-MIB::ifInOctets" "IF-MIB::ifOutOctets"
-        </Data>
-        <Host "{{ sn_hostname }}">
-                Address "127.0.0.1"
-                Version 1
-                Community "public"
-                Collect "std_traffic"
-                Interval 60
-        </Host>
-</Plugin>
-
-<Plugin rrdtool>
-        DataDir "/var/lib/collectd/rrd"
+<Plugin "interface">
+  Interface "eth0"
+  Interface "bat0"
+  IgnoreSelected false
 </Plugin>
 
 <Plugin syslog>
