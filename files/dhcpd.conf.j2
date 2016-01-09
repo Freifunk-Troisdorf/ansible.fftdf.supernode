@@ -1,4 +1,4 @@
-# Version 1.2
+# Version 1.3
 ddns-update-style none;
 option domain-name "fftdf";
 default-lease-time 300;
@@ -7,8 +7,9 @@ log-facility local7;
 subnet 10.188.0.0 netmask 255.255.0.0 {
 authoritative;
 range {{ sn_dhcp_range }};
-option domain-name-servers {{ sn_mesh_IPv4 }}, {{ sn_dhcp_dns }};
-option routers {{ sn_dhcp_router }};
+option domain-name-servers {{ sn_mesh_IPv4 }}, {{ sn_dhcp_dns_v4 }};
+option routers {{ sn_mesh_IPv4 }};
+option interface-mtu {{ sn_mtu }};
 interface bat0;
 }
 include "/opt/freifunk/static-dhcp/static.conf";
