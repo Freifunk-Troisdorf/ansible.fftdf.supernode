@@ -26,7 +26,13 @@ LoadPlugin processes
 LoadPlugin users
 LoadPlugin uptime
 LoadPlugin interface
-
+LoadPugin filecount
+<Plugin "filecount">
+  <Directory "/opt/freifunk/tunneldigger_interfaces">
+    Instance "tunneldigger-connections"
+    Name "l2tp1*"
+  </Directory>
+</Plugin>
 <Plugin write_graphite>
         <Carbon>
 		Host "10.188.1.27"
