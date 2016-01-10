@@ -15,9 +15,6 @@ done
 # restart when kernel panic
 /sbin/sysctl kernel.panic=1
 
-# Stop tunneldigger until bat0 is up
-/usr/sbin/service tunneldigger stop
-
 # Routing table 42
 /bin/grep 42 /etc/iproute2/rt_tables || /bin/echo 42 ffrl >> /etc/iproute2/rt_tables
 
@@ -27,14 +24,22 @@ done
 
 # Set mark 4 to Freifunk traffic
 /sbin/iptables -t mangle -A PREROUTING -s 10.0.0.0/8 ! -d 10.0.0.0/8 -j MARK --set-mark 4
-/sbin/ip6tables -t mangle -A PREROUTING -s 2a03:2260:121::/48 ! -d 2a03:2260:121::/48 -j MARK --set-mark 4
+#/sbin/ip6tables -t mangle -A PREROUTING -s 2a03:2260:121::/48 ! -d 2a03:2260:121::/48 -j MARK --set-mark 4
 /sbin/ip6tables -t mangle -A PREROUTING -s 2a03:2260:121::/64 ! -d 2a03:2260:121::/64 -j MARK --set-mark 4
 
 # NAT on eth0
 /sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
+# NAT on GRE Freifunk interface
+#/sbin/iptables -t nat -A POSTROUTING -o gre-+ -j SNAT --to-source 185.66.193.105
+/sbin/iptables -t nat -A POSTROUTING -o gre-+ -j SNAT --to-source {{ sn_ffrl_IPv4 }}
+
+# MTU
+/sbin/iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o gre-+ -j TCPMSS --set-mss 1312
+/sbin/ip6tables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o gre-+ -j TCPMSS --set-mss 1312
+
 # All from FF IPv4 via routing table 42
-/bin/ip rule add from 185.66.193.104/30 lookup 42
+/bin/ip rule add from {{ sn_ffrl_IPv4 }}/32 lookup 42
 /bin/ip -6 rule add from  2a03:2260:121::/64 lookup 42
 
 # Allow MAC address spoofing
@@ -42,16 +47,22 @@ done
 
 sleep 5
 
-# Start tunneldigger
-/bin/systemctl restart tunneldigger
-/bin/systemctl enable tunneldigger
+# stop tunneldigger
+/bin/systemctl disable tunneldigger
+/bin/systemctl stop tunneldigger
 
-# radvd restart
-/bin/systemctl restart radvd
-/bin/systemctl enable radvd
+# restart bird
+/bin/systemctl start bird
+/bin/systemctl start bird6
+/bin/systemctl enable bird
+/bin/systemctl enable bird6
+
+# stop radvd
+/bin/systemctl disable radvd
+/bin/systemctl stop radvd
 
 # restart DHCP
-/bin/systemctl restart isc-dhcp-server
-/bin/systemctl enable isc-dhcp-server
+/bin/systemctl disable isc-dhcp-server
+/bin/systemctl stop isc-dhcp-server
 
 exit 0

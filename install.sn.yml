@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v1.9.3
+    snversion: master_v2.1
     batmanversion: v2015.2
     common_required_packages:
       - git
@@ -62,6 +62,8 @@
       - authorized_keys
     logrotate_config:
       - logrotate.conf
+    tunneld_stats_file:
+      - collectd_td_stat.sh
 
 
   tasks:
@@ -95,12 +97,12 @@
       poll: 0
       ignore_errors: true
       when: sethostname.changed
-    - name: waiting for server to come back
+    - name: waiting for server to come back (1st)
       local_action:
                    wait_for
                    host={{ inventory_hostname }}
                    port=22
-                   delay=15
+                   delay=20
                    timeout=300
       when: hosts.changed
       when: sethostname.changed
@@ -194,13 +196,24 @@
       copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
       with_items: check_gw_script
       register: check_gw
+      when: sn_exit is undefined
     - name: Add cron job with check gateway script
       cron: name=check_gw job="/opt/freifunk/keepalive.sh > /dev/null 2>&1" user="root" 
       when: check_gw.changed
+
+    - name: Tunneldigger stats
+      copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
+      with_items: tunneld_stats_file
+      register: tunneld_stats
+      when: sn_exit is undefined
+    - name: Add cron job tunneldigger stats
+      cron: name=tunneld_stats job="/opt/freifunk/collectd_td_stat.sh > /dev/null 2>&1" user="root"
+      when: tunneld_stats.changed
+
+
     - name: Copy dhcpd template file
       template: src=./files/dhcpd.conf.j2 dest=/etc/dhcp/dhcpd.conf owner=root group=root mode=0444
       register: dhcpd
-
     - name: Clone static DHCP config
       git: repo=https://github.com/Freifunk-Troisdorf/static-dhcp
            dest=/opt/freifunk/static-dhcp
@@ -208,7 +221,6 @@
     - name: Add cron static DHCP
       cron: name=StaticDHCP minute="*" job="/opt/freifunk/static-dhcp/dhcp-update.sh"
       when: dhcpd.changed
-
     - name: Restart dhcpd
       service: name=isc-dhcp-server state=restarted
       when: dhcpd.changed
@@ -217,8 +229,14 @@
       cron: name=backbone special_time=reboot job="/opt/freifunk/l2tp_backbone.sh"
     - name: Add cron startup script
       cron: name=startup special_time=reboot job="/opt/freifunk/sn_startup.sh"
+
     - name: Copy backbone script
       template: src=./files/l2tp_backbone.sh.j2 dest=/opt/freifunk/l2tp_backbone.sh owner=root group=root mode=0544
+      when: sn_exit is undefined 
+    - name: Copy backbone script
+      template: src=./files/l2tp_backbone.sh.exit.j2 dest=/opt/freifunk/l2tp_backbone.sh owner=root group=root mode=0544
+      when: sn_exit is defined
+
     - name: Collectd template file
       template: src=./files/collectd.conf.j2 dest=/etc/collectd/collectd.conf owner=root group=root mode=0444
       register: collectd
@@ -227,6 +245,7 @@
       when: collectd.changed
     - name: configure startup script
       template: src=./files/sn_startup.sh.j2 dest=/opt/freifunk/sn_startup.sh owner=root group=root mode=0500
+      when: sn_exit is undefined
     - name: SSH authorized_keys
       copy: src=./files/{{ item }} dest=/root/.ssh owner=root group=root mode=0400
       with_items: authorized_keys
@@ -243,6 +262,22 @@
       template: src=./files/alfred.sh.j2 dest=/opt/freifunk/alfred.sh owner=root group=root mode=0544
     - name: Add cron job with alfred info script
       cron: name=alfred_info job="/opt/freifunk/alfred.sh > /dev/null 2>&1" user="root"
+    - name: Interface configuration with ffrl gre tunnel
+      copy: src=./files/interfaces-{{ sn_hostname }} dest=/etc/network/interfaces owner=root group=root mode=0544
+      when: sn_exit is defined
+    - name: Exit node startup script
+      template: src=./files/sn_startup.exit.sh.j2 dest=/opt/freifunk/sn_startup.sh owner=root group=root mode=0500
+      when: sn_exit is defined
+    - apt: update_cache=yes
+    - name: Install bird
+      apt: state=installed pkg=bird
+      when: sn_exit is defined
+    - name: Bird configuration
+      copy: src=./files/bird-{{ sn_hostname }}.conf dest=/etc/bird/bird.conf owner=bird group=bird mode=0444
+      when: sn_exit is defined
+    - name: Bird configuration
+      copy: src=./files/bird6-{{ sn_hostname }}.conf dest=/etc/bird/bird6.conf owner=bird group=bird mode=0444
+      when: sn_exit is defined
     - name: Reboot the server finally
       shell: sleep 2 && shutdown -r now "Ansible updates triggered"
       async: 1
@@ -256,7 +291,7 @@
                    wait_for
                    host={{ inventory_hostname }}
                    port=22
-                   delay=15
+                   delay=20
                    timeout=300
       when: tunneldigger.changed
     - name: Send notification message via Slack

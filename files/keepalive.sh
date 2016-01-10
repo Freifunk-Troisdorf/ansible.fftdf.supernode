@@ -1,50 +1,51 @@
 #!/bin/bash
-INTERFACE=eth0       # Set to name of VPN interface
-shopt -s nullglob
+# Version 1.5
+# Parameter setzen
+GATEWAY1ext=185.66.193.105
+GATEWAY2ext=185.66.193.106
+GATEWAY1=10.188.255.5
+GATEWAY2=10.188.255.6
+GATEWAY1v6=2a03:2260:121::255:5
+GATEWAY2v6=2a03:2260:121::255:6
+IP=/sbin/ip
+PING=/bin/ping
+BATCTL=/usr/local/sbin/batctl
 
-# Test whether gateway is connected to the outer world via VPN
-ping -q -I $INTERFACE 8.8.8.8 -c 4 -i 1 -W 5 >/dev/null 2>&1
+#if [ "hostname = troisdorf1 | troisdorf2" ]
+if [ $(hostname) = "troisdorf1" ] || [ $(hostname) = "troisdorf2" ]
+    then
+        DEFAULT_GATEWAY=$GATEWAY1
+	DEFAULT_GATEWAYext=$GATEWAY1ext
+        FALLBACK_GATEWAY=$GATEWAY2
+	FALLBACK_GATEWAYext=$GATEWAY2ext
+	DEFAULT_GATEWAYv6=$GATEWAY1v6
+	FALLBACK_GATEWAYv6=$GATEWAY2v6
+    else
+        DEFAULT_GATEWAY=$GATEWAY2
+	DEFAULT_GATEWAYext=$GATEWAY2ext
+        FALLBACK_GATEWAY=$GATEWAY1
+        FALLBACK_GATEWAY=$GATEWAY1ext
+	DEFAULT_GATEWAYv6=$GATEWAY2v6
+	FALLBACK_GATEWAYv6=$GATEWAY1v6
 
-if test $? -eq 0; then
-    NEW_STATE=server
-else
-    NEW_STATE=off
 fi
 
-# Iterate through network interfaces in sys file system
-for MESH in /sys/class/net/*/mesh; do
-# Check whether gateway modus needs to be changed
-OLD_STATE="$(cat $MESH/gw_mode)"
-[ "$OLD_STATE" == "$NEW_STATE" ] && continue
-   echo $NEW_STATE > $MESH/gw_mode
-   echo 92MBit/92MBit > $MESH/gw_bandwidth
-   logger "batman gateway mode changed to $NEW_STATE"
-
-   # Check whether gateway modus has been deactivated
-   if [ "$NEW_STATE" == "off" ]; then
-       # Shutdown DHCP server to prevent renewal of leases
-       /usr/sbin/service isc-dhcp-server stop
-   fi
-
-   # Check whether gateway modus has been activated
-   if [ "$NEW_STATE" == "server" ]; then
-       # Restart DHCP server
-       /usr/sbin/service isc-dhcp-server start
-   fi
-   exit 0
-done
-
-if [ "$NEW_STATE" == "server" ]; then
-   /usr/sbin/service isc-dhcp-server status 2>&1> /dev/null
-   if  $? -ne 0 
-   then
-       /usr/sbin/service isc-dhcp-server restart
-   fi
+if $PING -c 1 $DEFAULT_GATEWAYext
+        then
+                $IP route replace default via $DEFAULT_GATEWAY table 42
+                $IP -6 route replace default via $DEFAULT_GATEWAYv6 table 42
+                $BATCTL gw server 100Mbit/100Mbit
+                echo "Gateway erreichbar"
+        else
+        if $PING -c 1 $FALLBACK_GATEWAYext
+            then
+                $IP route replace default via $FALLBACK_GATEWAY table 42
+                $IP -6 route replace default via $FALLBACK_GATEWAYv6 table 42
+                $BATCTL gw server 80Mbit/80Mbit
+                echo "Nun FALLBACK_GATEWAY"
+            else
+                $BATCTL gw off
+                #Kein Gateway erreichbar, batctl gw off
+        fi
 fi
-if [ "$NEW_STATE" == "off" ]; then
-   /usr/sbin/service isc-dhcp-server status 2>&1> /dev/null
-   if  $? -eq 0 
-   then
-       /usr/sbin/service isc-dhcp-server stop
-   fi
-fi
+
