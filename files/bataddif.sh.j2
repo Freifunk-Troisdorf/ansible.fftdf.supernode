@@ -26,4 +26,4 @@ brctl=/sbin/brctl
 #/sbin/sysctl net.ipv4.conf.$INTERFACE.rp_filter=0
 #$batctl if add $INTERFACE
 #echo "enabled" > /sys/devices/virtual/net/$INTERFACE/batman_adv/no_rebroadcast
-$brctl addif br-nodes
+$brctl addif br-nodes $INTERFACE
