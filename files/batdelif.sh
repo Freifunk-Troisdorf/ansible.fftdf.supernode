@@ -1,4 +1,4 @@
 #!/bin/bash
 INTERFACE="$3"
 
-/usr/local/sbin/batctl if del $INTERFACE
+/sbin/brctl delif br-nodes $INTERFACE
