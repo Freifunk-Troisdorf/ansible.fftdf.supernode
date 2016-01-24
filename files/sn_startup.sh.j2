@@ -54,4 +54,10 @@ sleep 5
 /bin/systemctl restart isc-dhcp-server
 /bin/systemctl enable isc-dhcp-server
 
+# Create Tunneldigger Bridge
+brctl addbr br-nodes
+ip link set dev br-nodes up
+ebtables -A FORWARD --logical-in br-nodes -j DROP
+
+
 exit 0
