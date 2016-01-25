@@ -6,7 +6,7 @@ fi
 #Remove old Interfaces
 rm /opt/freifunk/tunneldigger_interfaces/*
 #Create Interace files
-for i in `/sbin/brctl show br-nodes | grep l2tp1`;
+for i in `/sbin/brctl show br-nodes | grep l2tp`;
 do
         touch /opt/freifunk/tunneldigger_interfaces/$i
 done
