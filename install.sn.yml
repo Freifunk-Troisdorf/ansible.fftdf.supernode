@@ -196,7 +196,13 @@
       copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
       with_items: check_gw_script
       register: check_gw
-#      when: sn_exit is undefined
+      when: sn_exit is undefined
+
+    - name: Check gateway / keepalive script
+      template: src=./files/keepalive.exit.sh.j2 dest=/opt/freifunk/keepalive.sh owner=root group=root mode=0500
+      register: check_gw
+      when: sn_exit is defined
+
     - name: Add cron job with check gateway script
       cron: name=check_gw job="/opt/freifunk/keepalive.sh > /dev/null 2>&1" user="root" 
       when: check_gw.changed

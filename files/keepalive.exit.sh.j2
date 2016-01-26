@@ -1,0 +1,10 @@
+#!/bin/bash
+
+ping -q -I {{ sn_ffrl_IPv4 }} 8.8.8.8 -c 4 -i 1 -W 5 >/dev/null 2>&1
+
+if test $? -eq 0; then
+    /usr/local/sbin/batctl gw server 100Mbit/100Mbit
+else
+    /usr/local/sbin/batctl gw off
+fi
+

@@ -54,6 +54,8 @@ $ip -6 addr add $communitynetworkv6$octet3rd:${localserver#$communityname}/64 de
 $alfred -i bat0 > /dev/null 2>&1 &
 /bin/sleep 15
 $batadv -i bat0 -s > /dev/null 2>&1 &
-/usr/sbin/service bind9 restart
+/bin/systemctl restart isc-dhcp-server
+/bin/systemctl restart bind9
 #/usr/local/sbin/batctl gw client 3
 /usr/local/sbin/batctl gw server 100Mbit/100Mbit
+
