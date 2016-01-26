@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version 1.5
+# Version 1.6
 # Parameter setzen
 GATEWAY1ext=185.66.193.105
 GATEWAY2ext=185.66.193.106
@@ -24,7 +24,7 @@ if [ $(hostname) = "troisdorf1" ] || [ $(hostname) = "troisdorf2" ]
         DEFAULT_GATEWAY=$GATEWAY2
 	DEFAULT_GATEWAYext=$GATEWAY2ext
         FALLBACK_GATEWAY=$GATEWAY1
-        FALLBACK_GATEWAY=$GATEWAY1ext
+        FALLBACK_GATEWAYext=$GATEWAY1ext
 	DEFAULT_GATEWAYv6=$GATEWAY2v6
 	FALLBACK_GATEWAYv6=$GATEWAY1v6
 

@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v2.1
+    snversion: master_v2.9000001_beta
     batmanversion: v2015.2
     common_required_packages:
       - git
@@ -71,8 +71,8 @@
       raw: "sed -i '/deb cdrom/c\\#' /etc/apt/sources.list"
     - name: Make this server ansible compatible
       raw: "apt-get update && apt-get install python -y"
-    - name: Add backport repo to source list #target: /etc/apt/sources.list.d
-      apt_repository: repo='deb http://http.debian.net/debian jessie-backports main' state=present 
+#    - name: Add backport repo to source list #target: /etc/apt/sources.list.d
+#      apt_repository: repo='deb http://http.debian.net/debian jessie-backports main' state=present 
     - name: Update apt cache
       apt: update_cache=yes
     - name: Gathering facts
@@ -196,7 +196,7 @@
       copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
       with_items: check_gw_script
       register: check_gw
-      when: sn_exit is undefined
+#      when: sn_exit is undefined
     - name: Add cron job with check gateway script
       cron: name=check_gw job="/opt/freifunk/keepalive.sh > /dev/null 2>&1" user="root" 
       when: check_gw.changed
@@ -205,7 +205,7 @@
       copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
       with_items: tunneld_stats_file
       register: tunneld_stats
-      when: sn_exit is undefined
+#      when: sn_exit is undefined
     - name: Add cron job tunneldigger stats
       cron: name=tunneld_stats job="/opt/freifunk/collectd_td_stat.sh > /dev/null 2>&1" user="root"
       when: tunneld_stats.changed

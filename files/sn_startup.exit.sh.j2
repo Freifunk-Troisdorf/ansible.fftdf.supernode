@@ -45,6 +45,12 @@ done
 # Allow MAC address spoofing
 /sbin/sysctl net.ipv4.conf.bat0.rp_filter=0
 
+# Create Tunneldigger Bridge
+/sbin/brctl addbr br-nodes
+/sbin/ip link set dev br-nodes up
+/sbin/ebtables -A FORWARD --logical-in br-nodes -j DROP
+/usr/local/sbin/batctl if add br-nodes
+
 sleep 5
 
 # stop tunneldigger
@@ -64,5 +70,17 @@ sleep 5
 # restart DHCP
 /bin/systemctl disable isc-dhcp-server
 /bin/systemctl stop isc-dhcp-server
+
+# Start tunneldigger
+/bin/systemctl restart tunneldigger
+/bin/systemctl enable tunneldigger
+
+# radvd restart
+/bin/systemctl restart radvd
+/bin/systemctl enable radvd
+
+# restart DHCP
+/bin/systemctl restart isc-dhcp-server
+/bin/systemctl enable isc-dhcp-server
 
 exit 0

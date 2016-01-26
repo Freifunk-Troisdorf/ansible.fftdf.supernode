@@ -2,8 +2,8 @@
 # Version 6
 # Der servername muss mit einer einstelligen Zahl aufhoeren!!!!!
 communityname="troisdorf"
-#server="troisdorf1 troisdorf2 troisdorf3 troisdorf4 troisdorf5 troisdorf6 troisdorf7 troisdorf8 troisdorf9"
-server="troisdorf7 {{ sn_hostname }}"
+server="troisdorf1 troisdorf2 troisdorf3 troisdorf4 troisdorf5 troisdorf6 troisdorf7 troisdorf8 troisdorf9"
+#server="troisdorf7 {{ sn_hostname }}"
 domain="freifunk-troisdorf.de"
 mtu={{ sn_mtu }}
 # community MAC address, without the last Byte (:)!
@@ -55,4 +55,5 @@ $alfred -i bat0 > /dev/null 2>&1 &
 /bin/sleep 15
 $batadv -i bat0 -s > /dev/null 2>&1 &
 /usr/sbin/service bind9 restart
-/usr/local/sbin/batctl gw client 3
+#/usr/local/sbin/batctl gw client 3
+/usr/local/sbin/batctl gw server 100Mbit/100Mbit
