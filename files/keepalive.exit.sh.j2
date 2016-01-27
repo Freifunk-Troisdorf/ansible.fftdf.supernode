@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# -q quiet
+# -c nb of pings
+
+HOST1=8.8.8.8
+HOST2=8.8.4.4
+BATCTL=/usr/local/sbin/batctl
+
+ping -q -c5 $HOST1 > /dev/null
+if [ $? -eq 0 ]
+then
+        echo "ok"
+        $BATCTL gw server 100Mbit/100Mbit
+else
+
+        echo "$HOST1 NICHT ok"
+        ping -q -c5 $HOST2 > /dev/null
+        if [ $? -eq 0 ]
+                then
+                        echo "$HOST2 ok"
+                        $BATCTL gw server 100Mbit/100Mbit
+                else
+                        echo "$HOST2 NICHT ok"
+                        $BATCTL gw off
+        fi
+
+fi
+

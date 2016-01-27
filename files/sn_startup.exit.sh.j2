@@ -1,4 +1,5 @@
 #!/bin/sh
+# Version 1.7
 
 curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
 
@@ -45,11 +46,23 @@ done
 # Allow MAC address spoofing
 /sbin/sysctl net.ipv4.conf.bat0.rp_filter=0
 
+# Create Tunneldigger Bridge
+/sbin/brctl addbr br-nodes
+/sbin/ip link set dev br-nodes up
+/sbin/ebtables -A FORWARD --logical-in br-nodes -j DROP
+/usr/local/sbin/batctl if add br-nodes
+
 sleep 5
 
-# stop tunneldigger
-/bin/systemctl disable tunneldigger
-/bin/systemctl stop tunneldigger
+# Fixing the nf_conntrack … dropping packets error
+# hashsize = nf_conntrack_max / 4
+sysctl -w net.netfilter.nf_conntrack_max=131072
+echo 32768 > /sys/module/nf_conntrack/parameters/hashsize
+
+# Against Denial of Service attacks from internal network
+# Check with: sysctl -a | grep conntrack | grep timeout
+sysctl -w net.ipv4.netfilter.ip_conntrack_generic_timeout=240
+sysctl -w net.ipv4.netfilter.ip_conntrack_tcp_timeout_established=54000
 
 # restart bird
 /bin/systemctl start bird
@@ -57,12 +70,12 @@ sleep 5
 /bin/systemctl enable bird
 /bin/systemctl enable bird6
 
-# stop radvd
-/bin/systemctl disable radvd
-/bin/systemctl stop radvd
+# Start tunneldigger
+/bin/systemctl restart tunneldigger
+/bin/systemctl enable tunneldigger
 
-# restart DHCP
-/bin/systemctl disable isc-dhcp-server
-/bin/systemctl stop isc-dhcp-server
+# radvd restart
+/bin/systemctl restart radvd
+/bin/systemctl enable radvd
 
 exit 0
