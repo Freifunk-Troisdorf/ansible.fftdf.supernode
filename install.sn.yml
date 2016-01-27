@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v2.9000001_beta
+    snversion: master_v3.0.0
     batmanversion: v2015.2
     common_required_packages:
       - git
@@ -192,21 +192,18 @@
       with_items: logrotate_config
     - name: Create freifunk directory
       file: path=/opt/freifunk state=directory mode=0755
-    - name: Check gateway / keepalive script
+    - name: Check gateway / keepalive script supernode
       copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
       with_items: check_gw_script
       register: check_gw
       when: sn_exit is undefined
-
-    - name: Check gateway / keepalive script
+    - name: Check gateway / keepalive script super- and exitnode
       template: src=./files/keepalive.exit.sh.j2 dest=/opt/freifunk/keepalive.sh owner=root group=root mode=0500
       register: check_gw
       when: sn_exit is defined
-
     - name: Add cron job with check gateway script
       cron: name=check_gw job="/opt/freifunk/keepalive.sh > /dev/null 2>&1" user="root" 
       when: check_gw.changed
-
     - name: Tunneldigger stats
       copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
       with_items: tunneld_stats_file
@@ -215,8 +212,6 @@
     - name: Add cron job tunneldigger stats
       cron: name=tunneld_stats job="/opt/freifunk/collectd_td_stat.sh > /dev/null 2>&1" user="root"
       when: tunneld_stats.changed
-
-
     - name: Copy dhcpd template file
       template: src=./files/dhcpd.conf.j2 dest=/etc/dhcp/dhcpd.conf owner=root group=root mode=0444
       register: dhcpd
@@ -235,23 +230,24 @@
       cron: name=backbone special_time=reboot job="/opt/freifunk/l2tp_backbone.sh"
     - name: Add cron startup script
       cron: name=startup special_time=reboot job="/opt/freifunk/sn_startup.sh"
-
     - name: Copy backbone script
       template: src=./files/l2tp_backbone.sh.j2 dest=/opt/freifunk/l2tp_backbone.sh owner=root group=root mode=0544
       when: sn_exit is undefined 
     - name: Copy backbone script
       template: src=./files/l2tp_backbone.sh.exit.j2 dest=/opt/freifunk/l2tp_backbone.sh owner=root group=root mode=0544
       when: sn_exit is defined
-
     - name: Collectd template file
       template: src=./files/collectd.conf.j2 dest=/etc/collectd/collectd.conf owner=root group=root mode=0444
       register: collectd
     - name: Restart collectd
       service: name=collectd state=restarted
       when: collectd.changed
-    - name: configure startup script
+    - name: configure startup script supernode
       template: src=./files/sn_startup.sh.j2 dest=/opt/freifunk/sn_startup.sh owner=root group=root mode=0500
       when: sn_exit is undefined
+    - name: Exit node startup script super- and exitnode
+      template: src=./files/sn_startup.exit.sh.j2 dest=/opt/freifunk/sn_startup.sh owner=root group=root mode=0500
+      when: sn_exit is defined
     - name: SSH authorized_keys
       copy: src=./files/{{ item }} dest=/root/.ssh owner=root group=root mode=0400
       with_items: authorized_keys
@@ -270,9 +266,6 @@
       cron: name=alfred_info job="/opt/freifunk/alfred.sh > /dev/null 2>&1" user="root"
     - name: Interface configuration with ffrl gre tunnel
       copy: src=./files/interfaces-{{ sn_hostname }} dest=/etc/network/interfaces owner=root group=root mode=0544
-      when: sn_exit is defined
-    - name: Exit node startup script
-      template: src=./files/sn_startup.exit.sh.j2 dest=/opt/freifunk/sn_startup.sh owner=root group=root mode=0500
       when: sn_exit is defined
     - apt: update_cache=yes
     - name: Install bird
