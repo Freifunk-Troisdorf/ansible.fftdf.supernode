@@ -1,29 +1,68 @@
-#!/bin/sh
-#
-# -q quiet
-# -c nb of pings
-
-HOST1=8.8.8.8
-HOST2=8.8.4.4
+#!/bin/bash
+#Variablen
+iam=$(/bin/hostname)
 BATCTL=/usr/local/sbin/batctl
-
-ping -q -c5 $HOST1 > /dev/null
-if [ $? -eq 0 ]
+SN1=troisdorf5
+SN2=troisdorf6
+if [ $iam == troisdorf5 ]
 then
-        echo "ok"
-        $BATCTL gw server 100Mbit/100Mbit
+	my_SN_IP=185.66.193.105
+	other_SN_IP=185.66.193.106
 else
-
-        echo "$HOST1 NICHT ok"
-        ping -q -c5 $HOST2 > /dev/null
-        if [ $? -eq 0 ]
-                then
-                        echo "$HOST2 ok"
-                        $BATCTL gw server 100Mbit/100Mbit
-                else
-                        echo "$HOST2 NICHT ok"
-                        $BATCTL gw off
-        fi
-
+	my_SN_IP=185.66.193.106
+	other_SN_IP=185.66.193.105
 fi
-
+#Auf 1 setzen um Lastverteilung 1/2 Monat einzuschalten
+loadbalance=0
+#Default Supernode if loadbalance=0
+active_SN=$SN2
+day=$(date +%d)
+if [ $loadbalance == 1 ] 
+then
+	if [ $day -gt 15 ] 
+	then
+		active_SN=$SN1
+	fi
+fi
+#Check other Supernode
+if [ $iam != $active_SN ] 
+then
+	ping -q -c5 $other_SN_IP -I eth0 > /dev/null
+	if [ $? -eq 0 ] 
+	then
+	    echo "Active Supernode is running"
+        $BATCTL gw off
+		/usr/sbin/service bird6 stop
+		/usr/sbin/service bird stop
+		/usr/sbin/service tunneldigger stop
+		/usr/sbin/service radvd stop
+	else
+		echo "First Supernode not running, activating backup Supernode"
+		$BATCTL gw server 100Mbit/100Mbit
+        /usr/sbin/service bird6 start
+        /usr/sbin/service bird start
+        /usr/sbin/service tunneldigger start
+        /usr/sbin/service radvd start
+		    curl -X POST --data-urlencode 'payload={"text": "troisdorf5 nicht pingbar. troisdorf6 eingeschaltet", "channel": "#technik", "username": "troisdorf6", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
+	fi
+else
+	# Check this Supernode
+	ping -q -c5 $my_SN_IP -I eth0 > /dev/null
+	if [ $? -eq 0 ] 
+	then
+	    echo "Supernode ok"
+		$BATCTL gw server 100Mbit/100Mbit
+        /usr/sbin/service bird6 start
+        /usr/sbin/service bird start
+        /usr/sbin/service tunneldigger start
+        /usr/sbin/service radvd start
+	else
+		echo "Supernode nicht pingbar"
+		$BATCTL gw off
+		/usr/sbin/service bird6 start
+		/usr/sbin/service bird start
+		/usr/sbin/service tunneldigger start
+		/usr/sbin/service radvd start
+		curl -X POST --data-urlencode 'payload={"text": "troisdorf6 nicht pingbar. services auf troisdorf6 neu gestartet", "channel": "#technik", "username": "troisdorf6", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
+	fi
+fi
