@@ -65,17 +65,22 @@ sysctl -w net.ipv4.netfilter.ip_conntrack_generic_timeout=240
 sysctl -w net.ipv4.netfilter.ip_conntrack_tcp_timeout_established=54000
 
 # restart bird
-/bin/systemctl start bird
-/bin/systemctl start bird6
-/bin/systemctl enable bird
-/bin/systemctl enable bird6
+#/bin/systemctl start bird
+#/bin/systemctl start bird6
+#/bin/systemctl enable bird
+#/bin/systemctl enable bird6
 
 # Start tunneldigger
-/bin/systemctl restart tunneldigger
-/bin/systemctl enable tunneldigger
+#/bin/systemctl restart tunneldigger
+#/bin/systemctl enable tunneldigger
 
 # radvd restart
-/bin/systemctl restart radvd
-/bin/systemctl enable radvd
+#/bin/systemctl restart radvd
+#/bin/systemctl enable radvd
 
+#Stop all Services - Started from keepalive.sh
+/bin/systemctl stop radvd
+/bin/systemctl stop tunneldigger
+/bin/systemctl stop bird
+/bin/systemctl stop bird6
 exit 0
