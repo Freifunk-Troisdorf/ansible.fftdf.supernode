@@ -43,7 +43,7 @@ then
         /usr/sbin/service bird start
         /usr/sbin/service tunneldigger start
         /usr/sbin/service radvd start
-		    curl -X POST --data-urlencode 'payload={"text": "troisdorf5 nicht pingbar. troisdorf6 eingeschaltet", "channel": "#technik", "username": "troisdorf6", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
+		    curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode nicht pingbar. {{ sn_hostname }} eingeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
 	fi
 else
 	# Check this Supernode
@@ -63,6 +63,6 @@ else
 		/usr/sbin/service bird start
 		/usr/sbin/service tunneldigger start
 		/usr/sbin/service radvd start
-		curl -X POST --data-urlencode 'payload={"text": "troisdorf6 nicht pingbar. services auf troisdorf6 neu gestartet", "channel": "#technik", "username": "troisdorf6", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
+		curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} nicht pingbar. services auf {{ sn_hostname }} neu gestartet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
 	fi
 fi
