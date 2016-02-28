@@ -35,12 +35,14 @@ then
 		/usr/sbin/service bird6 stop
 		/usr/sbin/service bird stop
 		/usr/sbin/service tunneldigger stop
+		/usr/sbin/service radvd stop
 	else
 		echo "First Supernode not running, activating backup Supernode"
 		$BATCTL gw server 100Mbit/100Mbit
         /usr/sbin/service bird6 start
         /usr/sbin/service bird start
         /usr/sbin/service tunneldigger start
+        /usr/sbin/service radvd start
 		    curl -X POST --data-urlencode 'payload={"text": "troisdorf5 nicht pingbar. troisdorf6 eingeschaltet", "channel": "#technik", "username": "troisdorf6", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
 	fi
 else
@@ -53,12 +55,14 @@ else
         /usr/sbin/service bird6 start
         /usr/sbin/service bird start
         /usr/sbin/service tunneldigger start
+        /usr/sbin/service radvd start
 	else
 		echo "Supernode nicht pingbar"
 		$BATCTL gw off
 		/usr/sbin/service bird6 start
 		/usr/sbin/service bird start
 		/usr/sbin/service tunneldigger start
+		/usr/sbin/service radvd start
 		curl -X POST --data-urlencode 'payload={"text": "troisdorf6 nicht pingbar. services auf troisdorf6 neu gestartet", "channel": "#technik", "username": "troisdorf6", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
 	fi
 fi
