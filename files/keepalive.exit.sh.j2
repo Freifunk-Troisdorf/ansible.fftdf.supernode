@@ -41,7 +41,7 @@ then
         /usr/sbin/service bird6 start
         /usr/sbin/service bird start
         /usr/sbin/service tunneldigger start
-		    curl -X POST --data-urlencode 'payload={"text": "troisdorf5 nicht pingbar. troisdorf6 eingeschaltet", "channel": "#technik", "username": "troisdorf6", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/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
+		    curl -X POST --data-urlencode 'payload={"text": "troisdorf5 nicht pingbar. troisdorf6 eingeschaltet", "channel": "#technik", "username": "troisdorf6", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
 	fi
 else
 	# Check this Supernode
@@ -59,6 +59,6 @@ else
 		/usr/sbin/service bird6 start
 		/usr/sbin/service bird start
 		/usr/sbin/service tunneldigger start
-		curl -X POST --data-urlencode 'payload={"text": "troisdorf6 nicht pingbar. services auf troisdorf6 neu gestartet", "channel": "#technik", "username": "troisdorf6", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/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
+		curl -X POST --data-urlencode 'payload={"text": "troisdorf6 nicht pingbar. services auf troisdorf6 neu gestartet", "channel": "#technik", "username": "troisdorf6", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
 	fi
 fi
