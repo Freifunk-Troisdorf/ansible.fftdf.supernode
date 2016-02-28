@@ -56,8 +56,8 @@ sleep 5
 
 # Fixing the nf_conntrack … dropping packets error
 # hashsize = nf_conntrack_max / 4
-sysctl -w net.netfilter.nf_conntrack_max=131072
-echo 32768 > /sys/module/nf_conntrack/parameters/hashsize
+sysctl -w net.netfilter.nf_conntrack_max=262144
+echo 65536 > /sys/module/nf_conntrack/parameters/hashsize
 
 # Against Denial of Service attacks from internal network
 # Check with: sysctl -a | grep conntrack | grep timeout

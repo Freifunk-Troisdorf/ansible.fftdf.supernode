@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v3.0.0
+    snversion: master_v3.0.1
     batmanversion: v2015.2
     common_required_packages:
       - git
@@ -130,9 +130,9 @@
            dest=/tmp/batman-adv
       when: aptupdates.changed
       register: getbatman
-    - name: Get batman-adv no rebrotcast patch
-      get_url: url=http://map.freifunk-moehne.de/stuff/1001-batman-adv-introduce-no_rebroadcast-option.patch dest=/tmp/batman-adv/1001-batman-adv-introduce-no_rebroadcast-option.patch
-      when: getbatman.changed
+#    - name: Get batman-adv no rebrotcast patch
+#      get_url: url=http://map.freifunk-moehne.de/stuff/1001-batman-adv-introduce-no_rebroadcast-option.patch dest=/tmp/batman-adv/1001-batman-adv-introduce-no_rebroadcast-option.patch
+#      when: getbatman.changed
     - name: Install batman-adv
       shell: cd /tmp/batman-adv && git checkout {{ batmanversion }} && make && make install
 #      shell: cd /tmp/batman-adv && git checkout {{ batmanversion }} && git apply 1001-batman-adv-introduce-no_rebroadcast-option.patch && make && make install
