@@ -1,5 +1,6 @@
 #!/bin/bash
 #Variablen
+while [ true ] ; do
 if [ `/bin/ps -ef | /bin/grep keepalive.sh | /usr/bin/wc -l` -gt 3 ]; then
 	echo größer
 	exit 0
@@ -80,3 +81,5 @@ else
 		curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} nicht pingbar. services auf {{ sn_hostname }} neu gestartet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
 	fi
 fi
+sleep 60
+done
