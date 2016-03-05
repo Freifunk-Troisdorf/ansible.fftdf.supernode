@@ -2,6 +2,22 @@
 INTERFACE="$3"
 MAC="$8"
 brctl=/sbin/brctl
+BLACKLISTFILE=/opt/freifunk/tunneldigger-blacklist.txt
+wget -q -O /opt/freifunk/tunneldigger-blacklist.txt https://raw.githubusercontent.com/Freifunk-Troisdorf/tunneldigger-blockliste/master/macs.txt
+if [ -f $BLACKLISTFILE ]
+  then
+    BLOCKLISTE=$(cat /opt/freifunk/tunneldigger-blacklist.txt)
+  else
+    touch=$BLOCKLISTE
+fi 
+
+for i in $BLOCKLISTE;
+do
+    if [[ $i == $MAC ]]; then
+      exit 1
+      echo "$MAC wurde blockiert"
+    fi
+done
 
 /bin/ip link set dev $INTERFACE up mtu 1312
 #echo "enabled" > /sys/devices/virtual/net/$INTERFACE/batman_adv/no_rebroadcast
