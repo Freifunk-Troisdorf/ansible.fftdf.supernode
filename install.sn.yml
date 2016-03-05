@@ -202,7 +202,7 @@
       register: check_gw
       when: sn_exit is defined
     - name: Add cron job with check gateway script
-      cron: name=check_gw job="/opt/freifunk/keepalive.sh > /dev/null 2>&1" user="root" 
+      cron: name=check_gw special_time=reboot job="/opt/freifunk/keepalive.sh > /dev/null 2>&1 &" user="root" 
       when: check_gw.changed
     - name: Tunneldigger stats
       copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
