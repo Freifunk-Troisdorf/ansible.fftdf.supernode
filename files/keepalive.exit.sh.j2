@@ -1,10 +1,6 @@
 #!/bin/bash
 #Variablen
 while [ true ] ; do
-if [ `/bin/ps -ef | /bin/grep keepalive.sh | /usr/bin/wc -l` -gt 3 ]; then
-	echo größer
-	exit 0
-fi
 supernode_off () {
     $BATCTL gw off
 	/usr/sbin/service bird6 stop
