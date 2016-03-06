@@ -1,5 +1,5 @@
 #!/bin/sh
-# Version 1.7
+# Version 1.9
 
 curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
 
@@ -25,14 +25,12 @@ done
 
 # Set mark 4 to Freifunk traffic
 /sbin/iptables -t mangle -A PREROUTING -s 10.0.0.0/8 ! -d 10.0.0.0/8 -j MARK --set-mark 4
-#/sbin/ip6tables -t mangle -A PREROUTING -s 2a03:2260:121::/48 ! -d 2a03:2260:121::/48 -j MARK --set-mark 4
 /sbin/ip6tables -t mangle -A PREROUTING -s 2a03:2260:121::/64 ! -d 2a03:2260:121::/64 -j MARK --set-mark 4
 
 # NAT on eth0
 /sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
 # NAT on GRE Freifunk interface
-#/sbin/iptables -t nat -A POSTROUTING -o gre-+ -j SNAT --to-source 185.66.193.105
 /sbin/iptables -t nat -A POSTROUTING -o gre-+ -j SNAT --to-source {{ sn_ffrl_IPv4 }}
 
 # MTU
@@ -48,35 +46,11 @@ done
 
 # Create Tunneldigger Bridge
 /sbin/brctl addbr br-nodes
-/sbin/ip link set dev br-nodes up
+/sbin/ip link set dev br-nodes up address 2E:9D:FA:A1:6B:0{{ sn_number }}
 /sbin/ebtables -A FORWARD --logical-in br-nodes -j DROP
 /usr/local/sbin/batctl if add br-nodes
 
 sleep 5
-
-# Fixing the nf_conntrack … dropping packets error
-# hashsize = nf_conntrack_max / 4
-sysctl -w net.netfilter.nf_conntrack_max=262144
-echo 65536 > /sys/module/nf_conntrack/parameters/hashsize
-
-# Against Denial of Service attacks from internal network
-# Check with: sysctl -a | grep conntrack | grep timeout
-sysctl -w net.ipv4.netfilter.ip_conntrack_generic_timeout=240
-sysctl -w net.ipv4.netfilter.ip_conntrack_tcp_timeout_established=54000
-
-# restart bird
-#/bin/systemctl start bird
-#/bin/systemctl start bird6
-#/bin/systemctl enable bird
-#/bin/systemctl enable bird6
-
-# Start tunneldigger
-#/bin/systemctl restart tunneldigger
-#/bin/systemctl enable tunneldigger
-
-# radvd restart
-#/bin/systemctl restart radvd
-#/bin/systemctl enable radvd
 
 #Stop all Services - Started from keepalive.sh
 /bin/systemctl stop radvd

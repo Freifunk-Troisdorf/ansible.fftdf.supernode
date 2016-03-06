@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v3.0.1
+    snversion: master_v3.0.3
     batmanversion: v2015.2
     common_required_packages:
       - git
@@ -277,6 +277,13 @@
     - name: Bird configuration
       copy: src=./files/bird6-{{ sn_hostname }}.conf dest=/etc/bird/bird6.conf owner=bird group=bird mode=0444
       when: sn_exit is defined
+    - name: set netfilter rules
+      lineinfile: dest=/etc/sysctl.conf line={{ item }}
+      with_items:
+                  - "net.ipv4.netfilter.ip_conntrack_generic_timeout = 240"
+                  - "net.ipv4.netfilter.ip_conntrack_tcp_timeout_established = 54000"
+                  - "net.netfilter.nf_conntrack_max = 262144"
+    - lineinfile: dest=/etc/modprobe.conf line="options ip_conntrack hashsize=65536"
     - name: Reboot the server finally
       shell: sleep 2 && shutdown -r now "Ansible updates triggered"
       async: 1

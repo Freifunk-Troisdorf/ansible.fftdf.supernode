@@ -15,6 +15,8 @@ iface lo inet6 loopback
 # The primary network interface
 allow-hotplug eth0
 iface eth0 inet dhcp
+	post-up ip route add 185.66.193.106/32 via 10.188.255.6 table 42
+	post-up ip route add 185.66.193.106/32 via 10.188.255.6
 allow-hotplug eth1
 iface eth1 inet6 static
         address 2a01:4f8:161:62a9::5
