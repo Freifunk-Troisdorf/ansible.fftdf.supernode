@@ -1,81 +1,96 @@
 #!/bin/bash
-#Variablen
+echo 0 > /tmp/sn_online
 while [ true ] ; do
-supernode_off () {
-    $BATCTL gw off
-	/usr/sbin/service bird6 stop
-	/usr/sbin/service bird stop
-	/usr/sbin/service tunneldigger stop
-	/usr/sbin/service radvd stop
-	echo "Active Supernode is running"
-}
-
-supernode_on () {
-	$BATCTL gw server 100Mbit/100Mbit
-    /usr/sbin/service bird6 start
-    /usr/sbin/service bird start
-    /usr/sbin/service tunneldigger start
-    /usr/sbin/service radvd start
+	online=$(/bin/cat /tmp/sn_online)
+	iam=$(/bin/hostname)
+	day=$(date +%d)
+	BATCTL=/usr/local/sbin/batctl
+	#### Settings ####
+	# Names of the 2 Supernodes #
+	SN1=troisdorf5
+	SN2=troisdorf6
+	# Default Supernode if loadbalance=0 or day > 15 #
+	active_SN=$SN2
+	# Turn loadbalance on/off #
+	loadbalance=1
+	##################
+	# functions #
+	# Supernode off #
+	supernode_off () {
+	    $BATCTL gw off
+		/usr/sbin/service bird6 stop
+		/usr/sbin/service bird stop
+		/usr/sbin/service tunneldigger stop
+		/usr/sbin/service radvd stop
+		/usr/sbin/service isc-dhcp-server stop
+		echo 0 > /tmp/sn_online
 	}
-
-supernode_fail () {
-	$BATCTL gw off
-	/usr/sbin/service bird6 restart
-	/usr/sbin/service bird restart
-	/usr/sbin/service tunneldigger restart
-	/usr/sbin/service radvd restart
-	echo "Supernode nicht pingbar"	
-}
-
-iam=$(/bin/hostname)
-BATCTL=/usr/local/sbin/batctl
-SN1=troisdorf5
-SN2=troisdorf6
-if [ $iam == troisdorf5 ]
-then
-	my_SN_IP=185.66.193.105
-	other_SN_IP=185.66.193.106
-else
-	my_SN_IP=185.66.193.106
-	other_SN_IP=185.66.193.105
-fi
-#Auf 1 setzen um Lastverteilung 1/2 Monat einzuschalten
-loadbalance=1
-#Default Supernode if loadbalance=0
-active_SN=$SN2
-day=$(date +%d)
-if [ $loadbalance == 1 ] 
-then
-	if [ $day -gt 15 ] 
+	# Supernode on #
+	supernode_on () {
+		$BATCTL gw server 100Mbit/100Mbit
+	    /usr/sbin/service bird6 start
+	    /usr/sbin/service bird start
+	    /usr/sbin/service tunneldigger start
+	    /usr/sbin/service radvd start
+	    /usr/sbin/service isc-dhcp-server start
+	    echo 1 > /tmp/sn_online
+	}
+	# Restart Services #
+	supernode_fail () {
+		$BATCTL gw off
+		/usr/sbin/service bird6 restart
+		/usr/sbin/service bird restart
+		/usr/sbin/service tunneldigger restart
+		/usr/sbin/service radvd restart
+		/usr/sbin/service isc-dhcp-server restart
+		echo 0 > /tmp/sn_online	
+	}
+ 	# who am i ? #
+	if [ $iam == troisdorf5 ]
 	then
-		active_SN=$SN1
-	fi
-fi
-#Check other Supernode
-if [ $iam != $active_SN ] 
-then
-	ping -q -c5 $other_SN_IP -I eth0 > /dev/null
-	if [ $? -eq 0 ] 
-	then
-    	supernode_off
+		my_SN_IP=185.66.193.105
+		other_SN_IP=185.66.193.106
 	else
-		supernode_on
-		echo "First Supernode not running!"
-		curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode nicht pingbar. {{ sn_hostname }} eingeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
-		sleep 900
+		my_SN_IP=185.66.193.106
+		other_SN_IP=185.66.193.105
 	fi
-else
-	# Check this Supernode
-	ping -q -c5 $my_SN_IP -I eth0 > /dev/null
-	if [ $? -eq 0 ] 
+	if [ $loadbalance == 1 ] 
 	then
-	    echo "Supernode ok"
-		supernode_on
-	else
-		echo "Supernode nicht pingbar"
-		supernode_fail
-		curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} nicht pingbar. services auf {{ sn_hostname }} neu gestartet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
+		if [ $day -gt 15 ] 
+		then
+			active_SN=$SN1
+		fi
 	fi
-fi
-sleep 60
+	#Check other Supernode
+	if [ $iam != $active_SN ] 
+	then
+		ping -q -c5 $other_SN_IP -I eth0 > /dev/null
+		if [ $? -eq 0 ] 
+		then
+	    	if [ $online == 1 ]; then
+	    		supernode_off
+	    		curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode wieder online. Ich habe mich wieder ausgeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
+	    	fi
+		else
+			supernode_on
+			curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode offline. Ich habe mich eingeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
+			sleep 900
+		fi
+	else
+		# Check this Supernode
+		ping -q -c5 $my_SN_IP -I eth0 > /dev/null
+		if [ $? -eq 0 ] 
+		then
+		    if [ $online == 0 ]; then
+		    	supernode_on
+		    	curl -X POST --data-urlencode 'payload={"text": "Ich bin jetzt Supernode!", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
+		    fi
+		else
+			supernode_fail
+			curl -X POST --data-urlencode 'payload={"text": "Ich konnte mich selbst nicht anpingen. Ich versuche mal die Services neu zu starten", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
+		fi
+	fi
+	# Push to Graphite #
+	echo "collectd.gateways.{{ sn_hostname }}.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
+	sleep 60
 done
