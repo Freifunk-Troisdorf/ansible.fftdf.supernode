@@ -1,5 +1,11 @@
 #!/bin/bash
 echo 0 > /tmp/sn_online
+$BATCTL gw off
+/usr/sbin/service bird6 stop
+/usr/sbin/service bird stop
+/usr/sbin/service tunneldigger stop
+/usr/sbin/service radvd stop
+/usr/sbin/service isc-dhcp-server stop
 while [ true ] ; do
 	online=$(/bin/cat /tmp/sn_online)
 	iam=$(/bin/hostname)
@@ -24,6 +30,7 @@ while [ true ] ; do
 		/usr/sbin/service radvd stop
 		/usr/sbin/service isc-dhcp-server stop
 		echo 0 > /tmp/sn_online
+		echo "collectd.gateways.{{ sn_hostname }}.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
 	# Supernode on #
 	supernode_on () {
@@ -34,6 +41,7 @@ while [ true ] ; do
 	    /usr/sbin/service radvd start
 	    /usr/sbin/service isc-dhcp-server start
 	    echo 1 > /tmp/sn_online
+	    echo "collectd.gateways.{{ sn_hostname }}.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
 	# Restart Services #
 	supernode_fail () {
@@ -44,6 +52,7 @@ while [ true ] ; do
 		/usr/sbin/service radvd restart
 		/usr/sbin/service isc-dhcp-server restart
 		echo 0 > /tmp/sn_online	
+		echo "collectd.gateways.{{ sn_hostname }}.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
  	# who am i ? #
 	if [ $iam == troisdorf5 ]
@@ -90,7 +99,5 @@ while [ true ] ; do
 			curl -X POST --data-urlencode 'payload={"text": "Ich konnte mich selbst nicht anpingen. Ich versuche mal die Services neu zu starten", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
 		fi
 	fi
-	# Push to Graphite #
-	echo "collectd.gateways.{{ sn_hostname }}.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	sleep 60
 done
