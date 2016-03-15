@@ -59,9 +59,11 @@ while [ true ] ; do
 	then
 		my_SN_IP=185.66.193.105
 		other_SN_IP=185.66.193.106
+		other_SN_IP_EXTERN=46.4.138.189
 	else
 		my_SN_IP=185.66.193.106
 		other_SN_IP=185.66.193.105
+		other_SN_IP_EXTERN=5.9.76.198
 	fi
 	if [ $loadbalance == 1 ] 
 	then
@@ -76,8 +78,8 @@ while [ true ] ; do
 		ping -q -c5 $other_SN_IP -I eth0 > /dev/null
 		if [ $? -eq 0 ] 
 		then
+			supernode_off
 	    	if [ $online == 1 ]; then
-	    		supernode_off
 	    		curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode wieder online. Ich habe mich wieder ausgeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
 	    	fi
 		else
@@ -90,8 +92,8 @@ while [ true ] ; do
 		ping -q -c5 $my_SN_IP -I eth0 > /dev/null
 		if [ $? -eq 0 ] 
 		then
+			supernode_on
 		    if [ $online == 0 ]; then
-		    	supernode_on
 		    	curl -X POST --data-urlencode 'payload={"text": "Ich bin jetzt Supernode!", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
 		    fi
 		else
@@ -99,5 +101,10 @@ while [ true ] ; do
 			curl -X POST --data-urlencode 'payload={"text": "Ich konnte mich selbst nicht anpingen. Ich versuche mal die Services neu zu starten", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
 		fi
 	fi
+	# Ping other Supernode on external interface
+	ping -q -c5 $other_SN_IP_EXTERN -I eth0 > /dev/null
+	if [ $? -eq 0 ] 
+	then
+		curl -X POST --data-urlencode 'payload={"text": "Anderer Supernode ist nicht über seine Externe adresse Pingbar!", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
 	sleep 60
 done
