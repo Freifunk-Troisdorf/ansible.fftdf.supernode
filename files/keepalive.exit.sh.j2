@@ -78,33 +78,37 @@ while [ true ] ; do
 		ping -q -c5 $other_SN_IP -I eth0 > /dev/null
 		if [ $? -eq 0 ] 
 		then
-			supernode_off
 	    	if [ $online == 1 ]; then
 	    		curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode wieder online. Ich habe mich wieder ausgeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
 	    	fi
+	    	supernode_off
 		else
 			supernode_on
 			curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode offline. Ich habe mich eingeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
-			sleep 900
+			sleep 300
 		fi
 	else
 		# Check this Supernode
 		ping -q -c5 $my_SN_IP -I eth0 > /dev/null
 		if [ $? -eq 0 ] 
 		then
-			supernode_on
 		    if [ $online == 0 ]; then
 		    	curl -X POST --data-urlencode 'payload={"text": "Ich bin jetzt Supernode!", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
 		    fi
+		    supernode_on
 		else
 			supernode_fail
 			curl -X POST --data-urlencode 'payload={"text": "Ich konnte mich selbst nicht anpingen. Ich versuche mal die Services neu zu starten", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
 		fi
 	fi
-	# Ping other Supernode on external interface
-	ping -q -c5 $other_SN_IP_EXTERN -I eth0 > /dev/null
-	if [ $? -eq 0 ] 
-	then
-		curl -X POST --data-urlencode 'payload={"text": "Anderer Supernode ist nicht über seine Externe adresse Pingbar!", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
+	for service in bird bird6 isc-dhcp-server radvd python named
+    do
+        x=`pidof $service`;
+        if [ "$x" == "" ]; then 
+                echo "collectd.gateways.{{ sn_hostname }}.$service 0 `date +%s`" | nc -q 0 10.188.1.27 2003
+        else
+                echo "collectd.gateways.{{ sn_hostname }}.$service 1 `date +%s`" | nc -q 0 10.188.1.27 2003
+        fi
+    done
 	sleep 60
 done
