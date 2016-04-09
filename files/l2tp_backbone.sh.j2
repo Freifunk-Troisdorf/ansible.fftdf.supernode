@@ -20,7 +20,6 @@ octet3rd="255"
 # CIDR muss /16 sein
 localserver=$(/bin/hostname)
 batadv=/usr/local/sbin/batadv-vis
-alfred=/usr/local/sbin/alfred
 batctl=/usr/local/sbin/batctl
 ip=/sbin/ip
 dig=/usr/bin/dig
@@ -49,10 +48,7 @@ $ip link set up dev bat0
 $ip addr add $communitynetwork.$octet3rd.${localserver#$communityname}/16 broadcast $communitynetwork.255.255 dev bat0
 $ip -6 addr add $communitynetworkv6$octet3rd:${localserver#$communityname}/64 dev bat0
 
-/usr/bin/killall alfred
 /usr/bin/killall batadv-vis
-/bin/sleep 5
-$alfred -i bat0 > /dev/null 2>&1 &
 /bin/sleep 15
 $batadv -i bat0 -s > /dev/null 2>&1 &
 /usr/sbin/service bind9 restart
