@@ -145,14 +145,6 @@
     - name: Install batctl
       shell: cd /tmp/batctl && git checkout {{ batmanversion }} && make && make install
       when: getbatctl.changed
-    - name: Get alfred
-      git: repo=http://git.open-mesh.org/alfred.git
-           dest=/tmp/alfred
-      when: aptupdates.changed
-      register: getalfred
-    - name: Install alfred
-      shell: cd /tmp/alfred && git checkout {{ batmanversion }} && make && make install
-      when: getalfred.changed
     - name: Get Tunneldigger
 #      git: repo=https://github.com/wlanslovenija/tunneldigger.git
       git: repo=https://github.com/ffrl/tunneldigger.git
