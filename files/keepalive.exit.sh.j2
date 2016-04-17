@@ -1,13 +1,13 @@
 #!/bin/bash
-echo 0 > /tmp/sn_online
-$BATCTL gw off
+/usr/local/sbin/batctl gw off
 /usr/sbin/service bird6 stop
 /usr/sbin/service bird stop
 /usr/sbin/service tunneldigger stop
 /usr/sbin/service radvd stop
 /usr/sbin/service isc-dhcp-server stop
 while [ true ] ; do
-	online=$(/bin/cat /tmp/sn_online)
+	online=$(/bin/cat /etc/supernode-status/supernode.status)
+	mode=$(/bin/cat /etc/supernode-status/supernode.mode)
 	iam=$(/bin/hostname)
 	day=$(date +%d)
 	BATCTL=/usr/local/sbin/batctl
@@ -15,10 +15,9 @@ while [ true ] ; do
 	# Names of the 2 Supernodes #
 	SN1=troisdorf5
 	SN2=troisdorf6
-	# Default Supernode if loadbalance=0 or day > 15 #
-	active_SN=$SN2
+	active_SN=$(/bin/hostname)
 	# Turn loadbalance on/off #
-	loadbalance=1
+	loadbalance=$(cat /etc/supernode-status/loadbalancing.mode)
 	##################
 	# functions #
 	# Supernode off #
@@ -29,8 +28,12 @@ while [ true ] ; do
 		/usr/sbin/service tunneldigger stop
 		/usr/sbin/service radvd stop
 		/usr/sbin/service isc-dhcp-server stop
-		echo 0 > /tmp/sn_online
-		echo "collectd.gateways.{{ sn_hostname }}.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
+		if [ $loadbalance == 1 ] && [ $mode != 0 ]; then
+			echo 3 > /etc/supernode-status/supernode.status
+		else
+			echo 0 > /etc/supernode-status/supernode.status
+		fi
+		echo "collectd.gateways.troisdorf5.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
 	# Supernode on #
 	supernode_on () {
@@ -40,8 +43,12 @@ while [ true ] ; do
 	    /usr/sbin/service tunneldigger start
 	    /usr/sbin/service radvd start
 	    /usr/sbin/service isc-dhcp-server start
-	    echo 1 > /tmp/sn_online
-	    echo "collectd.gateways.{{ sn_hostname }}.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
+	    if [ $loadbalance == 1 ]; then
+			echo 1 > /etc/supernode-status/supernode.status
+		else
+			echo 2 > /etc/supernode-status/supernode.status
+		fi
+	    echo "collectd.gateways.troisdorf5.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
 	# Restart Services #
 	supernode_fail () {
@@ -51,11 +58,11 @@ while [ true ] ; do
 		/usr/sbin/service tunneldigger restart
 		/usr/sbin/service radvd restart
 		/usr/sbin/service isc-dhcp-server restart
-		echo 0 > /tmp/sn_online	
-		echo "collectd.gateways.{{ sn_hostname }}.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
+		echo 0 > /etc/supernode-status/supernode.status	
+		echo "collectd.gateways.troisdorf5.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
  	# who am i ? #
-	if [ $iam == troisdorf5 ]
+	if [ $iam = "troisdorf5" ];
 	then
 		my_SN_IP=185.66.193.105
 		other_SN_IP=185.66.193.106
@@ -65,20 +72,22 @@ while [ true ] ; do
 		other_SN_IP=185.66.193.105
 		other_SN_IP_EXTERN=5.9.76.198
 	fi
-	if [ $loadbalance == 1 ] 
+	if [ $loadbalance = "1" ] && [ $mode != "0" ];
 	then
 		if [ $day -gt 15 ] 
 		then
 			active_SN=$SN1
+		else
+			active_SN=$SN2
 		fi
 	fi
 	#Check other Supernode
-	if [ $iam != $active_SN ] 
+	if [ $iam != $active_SN ]; 
 	then
 		ping -q -c5 $other_SN_IP -I eth0 > /dev/null
 		if [ $? -eq 0 ] 
 		then
-	    	if [ $online == 1 ]; then
+	    	if [ $online ==1 ] || [ $online = 2 ]; then
 	    		curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode wieder online. Ich habe mich wieder ausgeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
 	    	fi
 	    	supernode_off
@@ -89,25 +98,33 @@ while [ true ] ; do
 		fi
 	else
 		# Check this Supernode
-		ping -q -c5 $my_SN_IP -I eth0 > /dev/null
-		if [ $? -eq 0 ] 
-		then
-		    if [ $online == 0 ]; then
-		    	curl -X POST --data-urlencode 'payload={"text": "Ich bin jetzt Supernode!", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
-		    fi
-		    supernode_on
-		else
-			supernode_fail
-			curl -X POST --data-urlencode 'payload={"text": "Ich konnte mich selbst nicht anpingen. Ich versuche mal die Services neu zu starten", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
+		if [ $mode != "0" ]; then
+			ping -q -c5 $my_SN_IP -I eth0 > /dev/null
+			if [ $? -eq 0 ] 
+			then
+			    if [ $online = 0 ] || [ $online = 3 ]; then
+			    	curl -X POST --data-urlencode 'payload={"text": "Ich bin jetzt Supernode!", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
+			    fi
+			    supernode_on
+			else
+				supernode_fail
+				curl -X POST --data-urlencode 'payload={"text": "Ich konnte mich selbst nicht anpingen. Ich versuche mal die Services neu zu starten", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
+			fi
 		fi
+	fi
+	if [ $mode = "0" ]; then
+		supernode_off
+
 	fi
 	for service in bird bird6 isc-dhcp-server radvd python named
     do
         x=`pidof $service`;
-        if [ "$x" == "" ]; then 
-                echo "collectd.gateways.{{ sn_hostname }}.$service 0 `date +%s`" | nc -q 0 10.188.1.27 2003
+        if [ "$x" = "" ]; then 
+                echo "collectd.gateways.troisdorf5.$service 0 `date +%s`" | nc -q 0 10.188.1.27 2003
+                echo 0 > /etc/supernode-status/"$service".status
         else
-                echo "collectd.gateways.{{ sn_hostname }}.$service 1 `date +%s`" | nc -q 0 10.188.1.27 2003
+                echo "collectd.gateways.troisdorf5.$service 1 `date +%s`" | nc -q 0 10.188.1.27 2003
+                echo 1 > /etc/supernode-status/"$service".status
         fi
     done
 	sleep 60
