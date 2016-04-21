@@ -280,7 +280,7 @@
       with_items:
                - net.ipv4.netfilter.ip_conntrack_generic_timeout = 240
                - net.ipv4.netfilter.ip_conntrack_tcp_timeout_established = 54000
-               - net.netfilter.nf_conntrack_max = 262144
+               - net.netfilter.nf_conntrack_max = 65536
     - name: check modprobe.conf
       stat: path=/etc/modprobe.conf
       register: modprobe1
