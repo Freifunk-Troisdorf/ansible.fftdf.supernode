@@ -58,8 +58,6 @@
       - named.conf.fftdf
     check_gw_script:
       - keepalive.sh
-    supernode_config:
-      - supernode
     authorized_keys:
       - authorized_keys
     logrotate_config:
@@ -199,8 +197,7 @@
       cron: name=check_gw special_time=reboot job="/opt/freifunk/keepalive.sh > /dev/null 2>&1 &" user="root" 
       when: check_gw.changed
     - name: Supernode Config script super- and exitnode
-      template: src=./files/supernode dest=/usr/bin/supernode owner=root group=root mode=0500
-      register: supernode_config
+      copy: src=./files/supernode dest=/usr/bin/supernode owner=root group=root mode=0500
       when: sn_exit is defined
     - name: Tunneldigger stats
       copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
