@@ -17,9 +17,9 @@ allow-hotplug eth0
 iface eth0 inet dhcp
 allow-hotplug eth1
 iface eth1 inet6 static
-        address 2a01:4f8:161:62a9::5
+        address 2a01:4f8:172:f4b::5
         netmask 64
-        gateway 2a01:4f8:161:62a9::2
+        gateway 2a01:4f8:172:f4b::2
 
 # GRE Tunnel zum Rheinland Backbone
 # - Die Konfigurationsdaten werden vom Rheinland Backbone vergeben und zugewiesen
