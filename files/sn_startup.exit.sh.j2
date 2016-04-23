@@ -3,12 +3,6 @@
 
 curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
 
-# Block RFC1918 and APIPA destination via WAN
-/sbin/iptables -P OUTPUT ACCEPT
-for i in 10.0.0.0/8 172.16.0.0/12 169.254.0.0/16 192.168.0.0/16; do
-/sbin/iptables -A OUTPUT -o eth0 -d $i -j DROP
-done
-
 # Activate IP forwarding
 /sbin/sysctl -w net.ipv6.conf.all.forwarding=1
 /sbin/sysctl -w net.ipv4.ip_forward=1
@@ -26,16 +20,6 @@ done
 # Set mark 4 to Freifunk traffic
 /sbin/iptables -t mangle -A PREROUTING -s 10.0.0.0/8 ! -d 10.0.0.0/8 -j MARK --set-mark 4
 /sbin/ip6tables -t mangle -A PREROUTING -s 2a03:2260:121::/64 ! -d 2a03:2260:121::/64 -j MARK --set-mark 4
-
-# NAT on eth0
-/sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-
-# NAT on GRE Freifunk interface
-/sbin/iptables -t nat -A POSTROUTING -o gre-+ -j SNAT --to-source {{ sn_ffrl_IPv4 }}
-
-# MTU
-/sbin/iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o gre-+ -j TCPMSS --set-mss 1312
-/sbin/ip6tables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o gre-+ -j TCPMSS --set-mss 1312
 
 # All from FF IPv4 via routing table 42
 /bin/ip rule add from {{ sn_ffrl_IPv4 }}/32 lookup 42
