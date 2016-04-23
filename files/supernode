@@ -1,0 +1,52 @@
+#!/bin/bash
+help () {
+echo "Supernode Settings:"
+echo "status | off | loadbalance"
+}
+
+status () {
+	supernode_status=$(/bin/cat /etc/supernode-status/supernode.status)
+	supernode_mode=$(/bin/cat /etc/supernode-status/supernode.mode)
+	loadbalancing=$(cat /etc/supernode-status/loadbalancing.mode)
+
+	echo "Supernode Status: (Ist-Zustand)"
+	if [ $supernode_status == 0 ]; then
+		echo "Supernode ist Offline"
+	elif [ $supernode_status == 1 ]; then
+		echo "Supernode läuft (Loadbalancing)"
+	elif [ $supernode_status == 2 ]; then
+		echo "Supernode läuft (Dauer-Ein)"
+	elif [ $supernode_status == 3 ]; then
+		echo "Supernode Offline (Loadbalancing)"
+	fi
+	if [ $loadbalancing = 1 ]; then
+		echo "Loadbalancing ist Aktiv"
+	else
+		echo "Loadbalancing ist Deativiert"
+	fi
+}
+
+off () {
+	echo 0 > /etc/supernode-status/supernode.mode
+	echo "Supernode Deaktiviert"
+}
+
+on () {
+	echo 1 > /etc/supernode-status/supernode.mode
+	echo "Supernode Aktiviert"
+}
+
+loadbalance () {
+	loadbalancing=$(cat /etc/supernode-status/loadbalancing.mode)
+	if ! [ -f /etc/supernode-status/loadbalancing.mode ]; then
+		echo 0 > /etc/supernode-status/loadbalancing.mode
+	fi
+	if [ $loadbalancing == 0 ]; then
+		echo 1 > /etc/supernode-status/loadbalancing.mode
+	else
+		echo 0 > /etc/supernode-status/loadbalancing.mode
+	fi
+	sleep 5
+	status
+}
+$1

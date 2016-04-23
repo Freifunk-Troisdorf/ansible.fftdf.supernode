@@ -9,7 +9,11 @@
   user: root
   gather_facts: False
   vars:
+<<<<<<< HEAD
     snversion: master_v3.0.7
+=======
+    snversion: master_v3.0.8
+>>>>>>> master
     batmanversion: v2015.2
     common_required_packages:
       - git
@@ -196,6 +200,9 @@
     - name: Add cron job with check gateway script
       cron: name=check_gw special_time=reboot job="/opt/freifunk/keepalive.sh > /dev/null 2>&1 &" user="root" 
       when: check_gw.changed
+    - name: Supernode Config script super- and exitnode
+      copy: src=./files/supernode dest=/usr/bin/supernode owner=root group=root mode=0500
+      when: sn_exit is defined
     - name: Tunneldigger stats
       copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
       with_items: tunneld_stats_file
@@ -270,7 +277,7 @@
       with_items:
                - net.ipv4.netfilter.ip_conntrack_generic_timeout = 240
                - net.ipv4.netfilter.ip_conntrack_tcp_timeout_established = 54000
-               - net.netfilter.nf_conntrack_max = 262144
+               - net.netfilter.nf_conntrack_max = 65536
     - name: check modprobe.conf
       stat: path=/etc/modprobe.conf
       register: modprobe1
