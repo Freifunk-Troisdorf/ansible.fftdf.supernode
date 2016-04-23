@@ -35,10 +35,14 @@ auto gre-bb-a.ak.ber
 iface gre-bb-a.ak.ber inet static
         address 100.64.2.151
         netmask 255.255.255.254
+<<<<<<< HEAD
         pre-up ip tunnel add $IFACE mode gre local 5.9.76.198 remote 185.66.195.0 ttl 255
         post-up iptables -t nat -A POSTROUTING -o $IFACE -j SNAT --to-source 185.66.193.105
         post-up iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o $IFACE -j TCPMSS --set-mss 1312
         post-up ip6tables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o $IFACE -j TCPMSS --set-mss 1312
+=======
+        pre-up ip tunnel add $IFACE mode gre local 138.201.54.123 remote 185.66.195.0 ttl 255
+>>>>>>> origin/master
         post-up ip link set $IFACE mtu 1400
         post-down iptables -t nat -D POSTROUTING -o $IFACE -j SNAT --to-source 185.66.193.105
         post-down ip tunnel del $IFACE
@@ -52,10 +56,14 @@ auto gre-bb-b.ak.ber
 iface gre-bb-b.ak.ber inet static
         address 100.64.2.153
         netmask 255.255.255.254
+<<<<<<< HEAD
         pre-up ip tunnel add $IFACE mode gre local 5.9.76.198 remote 185.66.195.1 ttl 255
         post-up iptables -t nat -A POSTROUTING -o $IFACE -j SNAT --to-source 185.66.193.105
         post-up iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o $IFACE -j TCPMSS --set-mss 1312
         post-up ip6tables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o $IFACE -j TCPMSS --set-mss 1312
+=======
+        pre-up ip tunnel add $IFACE mode gre local 138.201.54.123 remote 185.66.195.1 ttl 255
+>>>>>>> origin/master
         post-up ip link set $IFACE mtu 1400
         post-down iptables -t nat -D POSTROUTING -o $IFACE -j SNAT --to-source 185.66.193.105
         post-down ip tunnel del $IFACE
@@ -70,10 +78,14 @@ auto gre-bb-a.ix.dus
 iface gre-bb-a.ix.dus inet static
         address 100.64.2.155
         netmask 255.255.255.254
+<<<<<<< HEAD
         pre-up ip tunnel add $IFACE mode gre local 5.9.76.198 remote 185.66.193.0 ttl 255
         post-up iptables -t nat -A POSTROUTING -o $IFACE -j SNAT --to-source 185.66.193.105
         post-up iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o $IFACE -j TCPMSS --set-mss 1312
         post-up ip6tables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o $IFACE -j TCPMSS --set-mss 1312
+=======
+        pre-up ip tunnel add $IFACE mode gre local 138.201.54.123 remote 185.66.193.0 ttl 255
+>>>>>>> origin/master
         post-up ip link set $IFACE mtu 1400
         post-down iptables -t nat -D POSTROUTING -o $IFACE -j SNAT --to-source 185.66.193.105
         post-down ip tunnel del $IFACE
@@ -88,10 +100,14 @@ auto gre-bb-b.ix.dus
 iface gre-bb-b.ix.dus inet static
         address 100.64.2.157
         netmask 255.255.255.254
+<<<<<<< HEAD
         pre-up ip tunnel add $IFACE mode gre local 5.9.76.198 remote 185.66.193.1 ttl 255
         post-up iptables -t nat -A POSTROUTING -o $IFACE -j SNAT --to-source 185.66.193.105
         post-up iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o $IFACE -j TCPMSS --set-mss 1312
         post-up ip6tables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN -o $IFACE -j TCPMSS --set-mss 1312
+=======
+        pre-up ip tunnel add $IFACE mode gre local 138.201.54.123 remote 185.66.193.1 ttl 255
+>>>>>>> origin/master
         post-up ip link set $IFACE mtu 1400
         post-down iptables -t nat -D POSTROUTING -o $IFACE -j SNAT --to-source 185.66.193.105
         post-down ip tunnel del $IFACE
