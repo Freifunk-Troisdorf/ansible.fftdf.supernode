@@ -9,11 +9,7 @@
   user: root
   gather_facts: False
   vars:
-<<<<<<< HEAD
-    snversion: master_v3.0.7
-=======
-    snversion: master_v3.0.8
->>>>>>> master
+    snversion: master_v3.0.9
     batmanversion: v2015.2
     common_required_packages:
       - git
