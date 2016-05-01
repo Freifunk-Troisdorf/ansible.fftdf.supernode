@@ -116,7 +116,7 @@ while [ true ] ; do
 		supernode_off
 
 	fi
-	for service in bird bird6 isc-dhcp-server radvd python named
+	for service in bird bird6 dhcpd radvd python named
     do
         x=`pidof $service`;
         if [ "$x" = "" ]; then 
