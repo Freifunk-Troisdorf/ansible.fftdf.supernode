@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v3.0.9
+    snversion: master_v3.0.10
     batmanversion: v2015.2
     common_required_packages:
       - git
@@ -184,6 +184,8 @@
       with_items: logrotate_config
     - name: Create freifunk directory
       file: path=/opt/freifunk state=directory mode=0755
+    - name: Create keepalive directory
+      file: path=/etc/supernode-status state=directory mode=0755
     - name: Check gateway / keepalive script supernode
       copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
       with_items: check_gw_script
