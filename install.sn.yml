@@ -62,8 +62,6 @@
       - authorized_keys
     logrotate_config:
       - logrotate.conf
-    tunneld_stats_file:
-      - collectd_td_stat.sh
 
 
   tasks:
@@ -201,14 +199,6 @@
     - name: Supernode Config script super- and exitnode
       copy: src=./files/supernode dest=/usr/bin/supernode owner=root group=root mode=0500
       when: sn_exit is defined
-    - name: Tunneldigger stats
-      copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
-      with_items: tunneld_stats_file
-      register: tunneld_stats
-#      when: sn_exit is undefined
-    - name: Add cron job tunneldigger stats
-      cron: name=tunneld_stats job="/opt/freifunk/collectd_td_stat.sh > /dev/null 2>&1" user="root"
-      when: tunneld_stats.changed
     - name: Copy dhcpd template file
       template: src=./files/dhcpd.conf.j2 dest=/etc/dhcp/dhcpd.conf owner=root group=root mode=0444
       register: dhcpd
