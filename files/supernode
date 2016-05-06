@@ -1,7 +1,7 @@
 #!/bin/bash
 help () {
 echo "Supernode Settings:"
-echo "status | off | loadbalance"
+echo "status | off | on | loadbalance_on | loadbalance_off | auto"
 }
 
 status () {
@@ -36,17 +36,19 @@ on () {
 	echo "Supernode Aktiviert"
 }
 
-loadbalance () {
-	loadbalancing=$(cat /etc/supernode-status/loadbalancing.mode)
-	if ! [ -f /etc/supernode-status/loadbalancing.mode ]; then
-		echo 0 > /etc/supernode-status/loadbalancing.mode
-	fi
-	if [ $loadbalancing == 0 ]; then
-		echo 1 > /etc/supernode-status/loadbalancing.mode
-	else
-		echo 0 > /etc/supernode-status/loadbalancing.mode
-	fi
-	sleep 5
-	status
+loadbalance_on () {
+	echo 1 > /etc/supernode-status/loadbalancing.mode
+	echo "Loadbalance on"
+}
+
+loadbalance_off () {
+	echo 0 > /etc/supernode-status/loadbalancing.mode
+	echo "Loadbalance off"
+}
+
+auto () {
+	echo 1 > /etc/supernode-status/loadbalancing.mode
+	echo 1 > /etc/supernode-status/supernode.mode
+	echo "Supernode Aktiviert inkl. Loadbalance"
 }
 $1
