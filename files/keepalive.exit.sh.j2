@@ -33,7 +33,7 @@ while [ true ] ; do
 		else
 			echo 0 > /etc/supernode-status/supernode.status
 		fi
-		echo "collectd.gateways.troisdorf5.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
+		echo "collectd.gateways.{{ sn_hostname }}.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
 	# Supernode on #
 	supernode_on () {
@@ -48,7 +48,7 @@ while [ true ] ; do
 		else
 			echo 2 > /etc/supernode-status/supernode.status
 		fi
-	    echo "collectd.gateways.troisdorf5.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
+	    echo "collectd.gateways.{{ sn_hostname }}.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
 	# Restart Services #
 	supernode_fail () {
@@ -59,7 +59,7 @@ while [ true ] ; do
 		/usr/sbin/service radvd restart
 		/usr/sbin/service isc-dhcp-server restart
 		echo 0 > /etc/supernode-status/supernode.status	
-		echo "collectd.gateways.troisdorf5.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
+		echo "collectd.gateways.{{ sn_hostname }}.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
  	# who am i ? #
 	if [ $iam = "troisdorf5" ];
@@ -120,10 +120,10 @@ while [ true ] ; do
     do
         x=`pidof $service`;
         if [ "$x" = "" ]; then 
-                echo "collectd.gateways.troisdorf5.$service 0 `date +%s`" | nc -q 0 10.188.1.27 2003
+                echo "collectd.gateways.{{ sn_hostname }}.$service 0 `date +%s`" | nc -q 0 10.188.1.27 2003
                 echo 0 > /etc/supernode-status/"$service".status
         else
-                echo "collectd.gateways.troisdorf5.$service 1 `date +%s`" | nc -q 0 10.188.1.27 2003
+                echo "collectd.gateways.{{ sn_hostname }}.$service 1 `date +%s`" | nc -q 0 10.188.1.27 2003
                 echo 1 > /etc/supernode-status/"$service".status
         fi
     done
