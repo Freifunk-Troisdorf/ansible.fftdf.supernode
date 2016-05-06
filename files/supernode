@@ -19,11 +19,14 @@ status () {
 	elif [ $supernode_status == 3 ]; then
 		echo "Supernode Offline (Loadbalancing)"
 	fi
-	if [ $loadbalancing = 1 ]; then
-		echo "Loadbalancing ist Aktiv"
-	else
-		echo "Loadbalancing ist Deativiert"
-	fi
+	for service in bird bird6 dhcpd radvd python named
+    do
+    	if [ "$(/bin/cat /etc/supernode-status/$service.status)" = "1" ]; then
+    		echo -e "$service \e[1;4;93mläuft\e[0m"
+    	else
+    		echo -e "$service \e[1;4;91mläuft nicht\e[0m"
+    	fi
+    done
 }
 
 off () {
