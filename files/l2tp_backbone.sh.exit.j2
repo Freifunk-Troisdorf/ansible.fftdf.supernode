@@ -46,12 +46,10 @@ $ip link set address $communitymacaddress:0${localserver#$communityname} dev bat
 $ip link set up dev bat0
 $ip addr add $communitynetwork.$octet3rd.${localserver#$communityname}/16 broadcast $communitynetwork.255.255 dev bat0
 $ip -6 addr add $communitynetworkv6$octet3rd:${localserver#$communityname}/64 dev bat0
+$ip route add {{ snx_ffrl_IPv4 }}/32 via {{ snx_mesh_IPv4 }} table 42
+$ip route add {{ snx_ffrl_IPv4 }}/32 via {{ snx_mesh_IPv4 }}
 
 /usr/bin/killall batadv-vis
 /bin/sleep 15
 $batadv -i bat0 -s > /dev/null 2>&1 &
-#/bin/systemctl restart isc-dhcp-server
-#/bin/systemctl restart bind9
-#/usr/local/sbin/batctl gw client 3
-#/usr/local/sbin/batctl gw server 100Mbit/100Mbit
 
