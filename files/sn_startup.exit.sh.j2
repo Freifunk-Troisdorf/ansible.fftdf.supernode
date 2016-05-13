@@ -33,8 +33,6 @@ curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted",
 /sbin/ip link set dev br-nodes up address 2E:9D:FA:A1:6B:0{{ sn_number }}
 /sbin/ebtables -A FORWARD --logical-in br-nodes -j DROP
 /usr/local/sbin/batctl if add br-nodes
-/sbin/ip route add {{ snx_ffrl_IPv4 }}/32 via {{ snx_mesh_IPv4 }} table 42
-/sbin/ip route add {{ snx_ffrl_IPv4 }}/32 via {{ snx_mesh_IPv4 }}
 
 sleep 5
 
