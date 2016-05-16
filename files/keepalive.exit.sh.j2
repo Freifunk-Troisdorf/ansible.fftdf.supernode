@@ -6,6 +6,7 @@ while [ true ] ; do
 	iam=$(/bin/hostname)
 	day=$(date +%d)
 	BATCTL=/usr/local/sbin/batctl
+	active_SN=$iam
 	#### Settings ####
 	# Names of the 2 Supernodes #
 	loadbalance=$(cat /etc/supernode-status/loadbalancing.mode)
