@@ -51,9 +51,14 @@
       - l2tp_eth
     tunneldigger_scripts:
       - start-broker.sh
+      - start-broker-backup.sh
       - batdelif.sh
     tunneldigger_service:
       - tunneldigger.service
+      - tunneldigger-backup.service
+    broker_cfg
+      - l2tp_broker.cfg-backup.j2
+      - l2tp_broker.cfg.j2
     bind_zone_fftdf:
       - named.conf.fftdf
     check_gw_script:
@@ -160,7 +165,8 @@
       pip: requirements=/srv/tunneldigger/broker/requirements.txt virtualenv=/srv/tunneldigger/
       when: tunneldigger.changed
     - name: Copy l2tp broker config template
-      template: src=./files/l2tp_broker.cfg.j2 dest=/srv/tunneldigger/l2tp_broker.cfg owner=root group=root mode=0444
+      template: src=./files/{{ item }} dest=/srv/ owner=root group=root mode=0444
+      with_items: broker_cfg
       when: tunneldigger.changed
     - name: Copy tunneldigger script template
       template: src=./files/bataddif.sh.j2 dest=/srv/tunneldigger/bataddif.sh owner=root group=root mode=0500
