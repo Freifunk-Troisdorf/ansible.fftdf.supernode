@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v3.0.14
+    snversion: master_v3.0.15
     batmanversion: v2015.2
     common_required_packages:
       - git
@@ -57,8 +57,8 @@
       - tunneldigger.service
       - tunneldigger-backup.service
     broker_cfg:
-      - l2tp_broker.cfg-backup.j2
-      - l2tp_broker.cfg.j2
+      - l2tp_broker-backup.cfg
+      - l2tp_broker.cfg
 #    bind_zone_fftdf:
 #      - named.conf.fftdf
     check_gw_script:
@@ -165,7 +165,7 @@
       pip: requirements=/srv/tunneldigger/broker/requirements.txt virtualenv=/srv/tunneldigger/
       when: tunneldigger.changed
     - name: Copy l2tp broker config template
-      template: src=./files/{{ item }} dest=/srv/ owner=root group=root mode=0444
+      template: src=./files/{{ item }} dest=/srv/tunneldigger owner=root group=root mode=0444
       with_items: broker_cfg
       when: tunneldigger.changed
     - name: Copy tunneldigger script template
@@ -175,8 +175,8 @@
       copy: src=./files/{{ item }} dest=/srv/tunneldigger owner=root group=root mode=0500
       with_items: tunneldigger_scripts
       when: tunneldigger.changed
-    - name: Copy tunneldigger service file
-      copy: src=./files/{{ item }} dest=/etc/systemd/system/tunneldigger.service owner=root group=root mode=0444
+    - name: Copy tunneldigger service template
+      copy: src=./files/{{ item }} dest=/etc/systemd/system owner=root group=root mode=0444
       with_items: tunneldigger_service
       when: tunneldigger.changed
     - name: Tunneldigger reload
@@ -184,6 +184,7 @@
       with_items:
       - systemctl daemon-reload
       - systemctl enable tunneldigger.service
+      - systemctl enable tunneldigger-backup.service
       when: tunneldigger.changed
     - name: Copy logrotate config
       copy: src=./files/{{ item }} dest=/etc/ owner=root group=root mode=0500
