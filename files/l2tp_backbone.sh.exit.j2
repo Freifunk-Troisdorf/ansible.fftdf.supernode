@@ -1,5 +1,8 @@
 #!/bin/sh
-# Version 7
+# Version 8
+
+sleep 120
+
 # Der servername muss mit einer einstelligen Zahl aufhoeren!!!!!
 communityname="troisdorf"
 server="troisdorf1 troisdorf2 troisdorf3 troisdorf4 troisdorf5 troisdorf6 troisdorf7 troisdorf8 troisdorf9"
@@ -11,12 +14,12 @@ communitymacaddress="a2:8c:ae:6f:f6"
 tunnelPrefix=10
 sessionPrefix=1
 # Netzwerkteil des Netzes, ohne abschliessenden Punkt
-communitynetwork="10.188"
+#communitynetwork="10.188"
 # IPv6 network
 #communitynetworkv6="fda0:747e:ab29:7405:255::"
-communitynetworkv6="2a03:2260:121::"
+#communitynetworkv6="2a03:2260:121::"
 # Drittes Octet des serverbereichs
-octet3rd="255"
+#octet3rd="255"
 # CIDR muss /16 sein
 localserver=$(/bin/hostname)
 batadv=/usr/local/sbin/batadv-vis
@@ -44,11 +47,12 @@ dig=/usr/bin/dig
 # Rest starten
 $ip link set address $communitymacaddress:0${localserver#$communityname} dev bat0
 $ip link set up dev bat0
-#$ip addr add $communitynetwork.$octet3rd.${localserver#$communityname}/16 broadcast $communitynetwork.255.255 dev bat0
 $ip addr add {{ sn_mesh_IPv4 }}/19 broadcast {{ sn_mesh_IPv4_brcast }} dev bat0
-#$ip -6 addr add $communitynetworkv6$octet3rd:${localserver#$communityname}/64 dev bat0
 $ip -6 addr add {{ sn_mesh_IPv6 }}/64 dev bat0
-$ip route add 10.188.0.0/16 via 10.188.x.254 table 42
+$ip route add 10.188.0.0/16 via {{ sn_mesh_IPv4_xfer }} table 42
+$ip route add 10.188.0.0/16 via {{ sn_mesh_IPv4_xfer }}
+$ip -6 route add 2a03:2260:121::/56 via {{ sn_mesh_IPv6_xfer }} table 42
+$ip -6 route add 2a03:2260:121::/56 via {{ sn_mesh_IPv6_xfer }}
 
 /usr/bin/killall batadv-vis
 /bin/sleep 15
