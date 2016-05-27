@@ -1,0 +1,22 @@
+;; db.188.10
+;; Reverse lookup zone for fftdf
+;;
+$TTL 2D
+@       IN      SOA     fftdf. root.fftdf. (
+                                2014071300      ; Serial
+                                        8H      ; Refresh
+                                        2H      ; Retry
+                                        4W      ; Expire
+                                        2D )    ; TTL Negative Cache
+
+@       IN      NS      dns1.infra.fftdf.
+
+1.0     IN      PTR     nextnode.fftdf.
+;; Update Servers
+22.1   IN      PTR     update1.infra.fftdf.
+23.1   IN      PTR     update2.infra.fftdf.
+24.1   IN      PTR     update3.infra.fftdf.
+25.1   IN      PTR     update4.infra.fftdf.
+;; Map Server
+21.1   IN      PTR     map.infa.fftdf.
+1.1    IN      PTR     gateway1.infra.fftdf.
