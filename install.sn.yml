@@ -253,13 +253,17 @@
     - name: SSH authorized_keys
       copy: src=./files/{{ item }} dest=/root/.ssh owner=root group=root mode=0400
       with_items: authorized_keys
-#    - name: Copy secondary zone file
-#      copy: src=./files/{{ item }} dest=/etc/bind owner=root group=bind mode=644
-#      with_items: bind_zone_fftdf
     - name: Bind9, activate fftdf zone
-      lineinfile: dest=/etc/bind/named.conf line='include "/etc/bind/named.conf.fftdf";' state=present
+      lineinfile: dest=/etc/bind/named.conf line='include "/etc/bind/fftdf/fftdf.conf";' state=present
     - name: Copy option template
       template: src=./files/named.conf.options.j2 dest=/etc/bind/named.conf.options owner=root group=bind mode=644
+    - name: Create fftdf directory
+      file: path=/etc/bind/fftdf state=directory
+    - name: Copy FFTDF Zones
+      copy: src=./files/fftdf/{{ item }} dest=/etc/bind/fftdf/{{ item }} owner=root group=bind mode=644
+      with_items: 
+        - fftdf.conf
+        - db.fftdf
     - name: Copy radvd config template
       template: src=./files/radvd.conf.j2 dest=/etc/radvd.conf owner=radvd group=root mode=0444
     - name: Interface configuration with ffrl gre tunnel
