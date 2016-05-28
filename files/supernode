@@ -13,11 +13,9 @@ status () {
 	if [ $supernode_status == 0 ]; then
 		echo "Supernode ist Offline"
 	elif [ $supernode_status == 1 ]; then
-		echo "Supernode läuft (Loadbalancing)"
+		echo "Supernode läuft"
 	elif [ $supernode_status == 2 ]; then
-		echo "Supernode läuft (Dauer-Ein)"
-	elif [ $supernode_status == 3 ]; then
-		echo "Supernode Offline (Loadbalancing)"
+		echo "Supernode läuft (Backup)"
 	fi
 	for service in bird bird6 dhcpd radvd python named
     do
@@ -31,20 +29,16 @@ status () {
 
 off () {
 	echo 0 > /etc/supernode-status/supernode.mode
-	echo 0 > /etc/supernode-status/loadbalancing.mode
-	
 	echo "Supernode Aus"
 }
 
 on () {
 	echo 1 > /etc/supernode-status/supernode.mode
-	echo 0 > /etc/supernode-status/loadbalancing.mode
-	echo "Supernode Dauer-An"
+	echo "Supernode An"
 }
 
-auto () {
-	echo 1 > /etc/supernode-status/loadbalancing.mode
-	echo 1 > /etc/supernode-status/supernode.mode
-	echo "Supernode Aktiviert inkl. Loadbalance"
+backup () {
+	echo 2 > /etc/supernode-status/supernode.mode
+	echo "Supernode Aktiviert inkl. Backup"
 }
 $1
