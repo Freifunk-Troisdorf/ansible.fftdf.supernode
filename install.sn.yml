@@ -263,7 +263,8 @@
       copy: src=./files/fftdf/{{ item }} dest=/etc/bind/fftdf/{{ item }} owner=root group=bind mode=644
       with_items: 
         - fftdf.conf
-        - db.fftdf
+    - name: Copy fftdf Zone config template
+      template: src=./files/fftdf/db.fftdf.j2 dest=/etc/bind/fftdf/db.fftdf owner=radvd group=root mode=0444
     - name: Copy radvd config template
       template: src=./files/radvd.conf.j2 dest=/etc/radvd.conf owner=radvd group=root mode=0444
     - name: Interface configuration with ffrl gre tunnel
