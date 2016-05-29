@@ -41,6 +41,7 @@ while [ true ] ; do
 		/usr/sbin/service bird6 stop
 		/usr/sbin/service bird stop
 		/usr/sbin/service tunneldigger stop
+		/usr/sbin/service tunneldigger-backup stop
 		/usr/sbin/service radvd stop
 		/usr/sbin/service isc-dhcp-server stop
 		echo 0 > /etc/supernode-status/supernode.status
