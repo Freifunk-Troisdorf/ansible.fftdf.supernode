@@ -11,24 +11,28 @@ while [ true ] ; do
 	if [ $iam = "troisdorf4" ]; then
 		my_SN_IP=185.66.193.104
 		other_SN_IP=185.66.193.105
+		other_SN_DNS=5.fftdf.de
 		meship=10.188.0.4
 		SN1=troisdorf4
 		SN2=troisdorf5
 	elif [ $iam = "troisdorf5" ]; then
 		my_SN_IP=185.66.193.105
 		other_SN_IP=185.66.193.106
+		other_SN_DNS=6.fftdf.de
 		meship=10.188.32.5
 		SN1=troisdorf5
 		SN2=troisdorf6
 	elif [ $iam = "troisdorf6" ]; then
 		my_SN_IP=185.66.193.106
-		other_SN_IP=185.66.193.107
+		other_SN_IP=185.66.193.104
+		other_SN_DNS=4.fftdf.de
 		meship=10.188.64.6
 		SN1=troisdorf6
-		SN2=troisdorf7
+		SN2=troisdorf4
 	elif [ $iam = "troisdorf7" ]; then
 		my_SN_IP=185.66.193.107
 		other_SN_IP=185.66.193.104
+		other_SN_DNS=4.fftdf.de
 		meship=10.188.92.7
 		SN1=troisdorf7
 		SN2=troisdorf4
@@ -83,13 +87,13 @@ while [ true ] ; do
 		echo "collectd.gateways.$iam.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
 #Check other Supernode
-	nc -zvu $other_SN_IP 53842
+	nc -zvu $other_SN_DNS 53842
 		if [ $? -eq 0 ] 
 		then
 	    	if [ $online = 2 ]; then
 	    		curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode wieder online. Ich habe mich wieder ausgeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
+	    		supernode_on
 	    	fi
-	    	supernode_off
 		else
 			supernode_backup
 			curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode offline. Ich habe mich eingeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
@@ -104,7 +108,7 @@ while [ true ] ; do
 			    fi
 			    if [ mode == 1 ]; then
 			    	supernode_on
-				else
+				elif [ mode == 2 ]; then
 					supernode_backup
 				fi
 			else
