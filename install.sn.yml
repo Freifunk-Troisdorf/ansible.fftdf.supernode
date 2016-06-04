@@ -284,6 +284,10 @@
       get_url: url=https://raw.githubusercontent.com/MightySCollins/speedtest-cli/master/speedtest_cli.py dest=/usr/bin/speedtest-cli
     - name: Change rights speedtest-cli
       file: path=/usr/bin/speedtest-cli owner=root group=root mode=0755
+    - name: Copy Slacktee Config
+      template: src=./files/slacktee.conf.j2 dest=/etc/slacktee.conf owner=root group=root mode=0544
+    - name: Copy Slacktee
+      copy: src=./files/slacktee.sh dest=/usr/local/bin/slacktee.sh owner=root group=root mode=0744
     - name: set netfilter rules
       lineinfile: dest=/etc/sysctl.conf line="{{ item }}"
       with_items:
