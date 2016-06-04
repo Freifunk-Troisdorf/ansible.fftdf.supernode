@@ -15,6 +15,7 @@ while [ true ] ; do
 		meship=10.188.0.4
 		SN1=troisdorf4
 		SN2=troisdorf5
+		slack="/usr/local/bin/slacktee.sh -u troisdorf4"
 	elif [ $iam = "troisdorf5" ]; then
 		my_SN_IP=185.66.193.105
 		other_SN_IP=185.66.193.106
@@ -22,6 +23,7 @@ while [ true ] ; do
 		meship=10.188.32.5
 		SN1=troisdorf5
 		SN2=troisdorf6
+		slack="/usr/local/bin/slacktee.sh -u troisdorf5"
 	elif [ $iam = "troisdorf6" ]; then
 		my_SN_IP=185.66.193.106
 		other_SN_IP=185.66.193.104
@@ -29,6 +31,7 @@ while [ true ] ; do
 		meship=10.188.64.6
 		SN1=troisdorf6
 		SN2=troisdorf4
+		slack="/usr/local/bin/slacktee.sh -u troisdorf6"
 	elif [ $iam = "troisdorf7" ]; then
 		my_SN_IP=185.66.193.107
 		other_SN_IP=185.66.193.104
@@ -36,6 +39,7 @@ while [ true ] ; do
 		meship=10.188.92.7
 		SN1=troisdorf7
 		SN2=troisdorf4
+		slack="/usr/local/bin/slacktee.sh -u troisdorf7"
 	fi
 ##################
 # functions #
@@ -87,35 +91,34 @@ while [ true ] ; do
 		echo "collectd.gateways.$iam.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
 #Check other Supernode
-	nc -zvu $other_SN_DNS 53842
-		if [ $? -eq 0 ] 
-		then
-	    	if [ $online = 2 ]; then
-	    		curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode wieder online. Ich habe mich wieder ausgeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
-	    		supernode_on
-	    	fi
-		else
-			supernode_backup
-			curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode offline. Ich habe mich eingeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
-		fi
-# Check this Supernode
-		if [ $mode != "0" ]; then
-			ping -q -c5 $my_SN_IP -I eth0 > /dev/null
-			if [ $? -eq 0 ] 
-			then
-			    if [ $online = 0 ]; then
-			    	curl -X POST --data-urlencode 'payload={"text": "Ich bin jetzt Supernode!", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
-			    fi
-			    if [ mode == 1 ]; then
-			    	supernode_on
-				elif [ mode == 2 ]; then
-					supernode_backup
-				fi
+	if [ $mode != "0" ]; then
+		if [ $mode == "1" ]; then
+			nc -zvu $other_SN_DNS 53842
+			if [ $? -eq 0 ]; then
+		    	if [ $online = 2 ]; then
+		    		echo "Supernode wieder online. Backup Modus abgeschaltet" | $slack
+		    		supernode_on
+		    	fi
 			else
-				supernode_fail
-				curl -X POST --data-urlencode 'payload={"text": "Ich konnte mich selbst nicht anpingen. Ich versuche mal die Services neu zu starten", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
+				supernode_backup
+				echo "Supernode offline. Backup modus eingeschaltet" | $slack
 			fi
 		fi
+# Check this Supernode
+		ping -q -c5 $my_SN_IP -I eth0 > /dev/null
+		if [ $? -eq 0 ]; then
+		    if [ $online = 0 ]; then
+		    	echo "Ich bin jetzt Supernode!" | $slack
+		    elif [ $mode == 1 ]; then
+		    	supernode_on
+			elif [ $mode == 2 ]; then
+				supernode_backup
+			fi
+		else
+			supernode_fail
+			echo "Ich konnte mich selbst nicht anpingen. Ich versuche mal die Services neu zu starten" | $slack
+		fi
+	fi
 # Supernode off
 	if [ $mode = "0" ]; then
 		supernode_off
@@ -125,17 +128,20 @@ while [ true ] ; do
     do
         x=`pidof $service`;
         if [ "$x" = "" ]; then 
-                echo "collectd.gateways.$iam.$service 0 `date +%s`" | nc -q 0 10.188.1.27 2003
-                echo 0 > /etc/supernode-status/"$service".status
+            echo "collectd.gateways.$iam.$service 0 `date +%s`" | nc -q 0 10.188.1.27 2003
+            echo 0 > /etc/supernode-status/"$service".status
         else
-                echo "collectd.gateways.$iam.$service 1 `date +%s`" | nc -q 0 10.188.1.27 2003
-                echo 1 > /etc/supernode-status/"$service".status
+            echo "collectd.gateways.$iam.$service 1 `date +%s`" | nc -q 0 10.188.1.27 2003
+            echo 1 > /etc/supernode-status/"$service".status
         fi
     done
 # Check DNS Server
    	host google.de $meship
    	if [ "$?" != "0" ]; then
    		service bind9 restart
+   		if [ $mode != "0" ]; then
+   			echo "DNS Server läuft nicht! Versuche neu zu starten!" | $slack
+   		fi
    	fi
 #Check Tunneldigger Connections
 	if ! [ -d /opt/freifunk/tunneldigger_interfaces ]; then
