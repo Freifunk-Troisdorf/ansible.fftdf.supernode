@@ -45,7 +45,7 @@ while [ true ] ; do
 # functions #
 # Supernode off #
 	supernode_off () {
-	    $BATCTL gw off
+	    /usr/local/sbin/batctl gw off
 		/usr/sbin/service bird6 stop
 		/usr/sbin/service bird stop
 		/usr/sbin/service tunneldigger stop
@@ -57,7 +57,7 @@ while [ true ] ; do
 	}
 # Supernode on #
 	supernode_on () {
-		$BATCTL gw server 100Mbit/100Mbit
+		/usr/local/sbin/batctl gw server 100Mbit/100Mbit
 	    /usr/sbin/service bird6 start
 	    /usr/sbin/service bird start
 	    /usr/sbin/service tunneldigger start
@@ -69,7 +69,7 @@ while [ true ] ; do
 	}
 # Supernode Backup Mode
 	supernode_backup () {
-		$BATCTL gw server 100Mbit/100Mbit
+		/usr/local/sbin/batctl gw server 100Mbit/100Mbit
 	    /usr/sbin/service bird6 start
 	    /usr/sbin/service bird start
 	    /usr/sbin/service tunneldigger start
@@ -81,7 +81,7 @@ while [ true ] ; do
 	}
 # Restart Services #
 	supernode_fail () {
-		$BATCTL gw off
+		/usr/local/sbin/batctl gw off
 		/usr/sbin/service bird6 restart
 		/usr/sbin/service bird restart
 		/usr/sbin/service tunneldigger restart
@@ -92,7 +92,7 @@ while [ true ] ; do
 	}
 #Check other Supernode
 	if [ $mode != "0" ]; then
-		if [ $mode == "1" ]; then
+		if [ $mode = "1" ]; then
 			nc -zvu $other_SN_DNS 53842
 			if [ $? -eq 0 ]; then
 		    	if [ $online = 2 ]; then
@@ -109,9 +109,9 @@ while [ true ] ; do
 		if [ $? -eq 0 ]; then
 		    if [ $online = 0 ]; then
 		    	echo "Ich bin jetzt Supernode!" | $slack
-		    elif [ $mode == 1 ]; then
+		    elif [ $mode = 1 ]; then
 		    	supernode_on
-			elif [ $mode == 2 ]; then
+			elif [ $mode = 2 ]; then
 				supernode_backup
 			fi
 		else
