@@ -5,6 +5,7 @@ batctl=/usr/local/sbin/batctl
 ip=/sbin/ip
 communitymacaddress="a2:8c:ae:6f:f6"
 localserver=$(/bin/hostname)
+communityname=troisdorf
 
 # L2tp to Map
 $ip l2tp add tunnel remote 138.201.70.103 local $(/bin/hostname -I | /usr/bin/cut -f1 -d' ') tunnel_id {{ sn_number }}0 peer_tunnel_id 0{{ sn_number }} encap udp udp_sport 300{{ sn_number }}0 udp_dport 3000{{ sn_number }}
