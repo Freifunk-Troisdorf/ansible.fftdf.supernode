@@ -15,7 +15,7 @@ iface lo inet6 loopback
 # The primary network interface
 allow-hotplug eth0
 iface eth0 inet static
-        address 163.172.194.197
+        address 212.83.154.70
         netmask 255.255.255.255
         gateway 163.172.210.1
         pointopoint 163.172.210.1

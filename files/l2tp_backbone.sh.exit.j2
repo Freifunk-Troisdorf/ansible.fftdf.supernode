@@ -51,8 +51,11 @@ $ip addr add {{ sn_mesh_IPv4 }}/19 broadcast {{ sn_mesh_IPv4_brcast }} dev bat0
 $ip -6 addr add {{ sn_mesh_IPv6 }}/64 dev bat0
 $ip route add 10.188.0.0/16 via {{ sn_mesh_IPv4_xfer }} table 42
 $ip route add 10.188.0.0/16 via {{ sn_mesh_IPv4_xfer }}
-$ip -6 route add 2a03:2260:121::/56 via {{ sn_mesh_IPv6_xfer }} table 42
-$ip -6 route add 2a03:2260:121::/56 via {{ sn_mesh_IPv6_xfer }}
+
+$ip -6 route add 2a03:2260:121:4000::/52 via {{ sn_mesh_IPv6_xfer }} table 42
+$ip -6 route add 2a03:2260:121:5000::/52 via {{ sn_mesh_IPv6_xfer }} table 42
+$ip -6 route add 2a03:2260:121:6000::/52 via {{ sn_mesh_IPv6_xfer }} table 42
+$ip -6 route add 2a03:2260:121:7000::/52 via {{ sn_mesh_IPv6_xfer }} table 42
 
 /usr/bin/killall batadv-vis
 /bin/sleep 15
