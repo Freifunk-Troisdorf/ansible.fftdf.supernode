@@ -9,7 +9,7 @@ iface lo inet loopback
         up ip address add 185.66.193.107/32 dev lo
 
 iface lo inet6 loopback
-        up ip address add 2a03:2260:121::107/48 dev lo
+	up ip address add 2a03:2260:121:7000::105/52 dev lo
 
 
 # The primary network interface
