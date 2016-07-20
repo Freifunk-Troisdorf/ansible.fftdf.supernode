@@ -208,9 +208,9 @@
       template: src=./files/keepalive.exit.sh.j2 dest=/opt/freifunk/keepalive.sh owner=root group=root mode=0500
       register: check_gw
       when: sn_exit is defined
-    - name: Add cron job with check gateway script
-      cron: name=check_gw special_time=reboot job="/opt/freifunk/keepalive.sh > /dev/null 2>&1 &" user="root" 
-      when: check_gw.changed
+#    - name: Add cron job with check gateway script
+#      cron: name=check_gw special_time=reboot job="/opt/freifunk/keepalive.sh > /dev/null 2>&1 &" user="root" 
+#      when: check_gw.changed
     - name: Supernode Config script super- and exitnode
       copy: src=./files/supernode dest=/usr/bin/supernode owner=root group=root mode=0500
       when: sn_exit is defined
