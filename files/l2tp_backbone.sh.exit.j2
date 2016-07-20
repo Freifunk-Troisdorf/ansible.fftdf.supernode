@@ -30,3 +30,12 @@ $ip -6 route add 2a03:2260:121:7000::/52 via {{ sn_mesh_IPv6_xfer }} table 42
 /usr/bin/killall batadv-vis
 /bin/sleep 15
 $batadv -i bat0 -s > /dev/null 2>&1 &
+/bin/sleep 15
+/usr/sbin/service tunneldigger restart
+/usr/sbin/service bind9 restart
+/usr/sbin/service bird restart
+/usr/sbin/service bird6 restart
+/usr/sbin/service isc-dhcp-server restart
+/usr/sbin/service radvd restart
+$batctl gw server
+
