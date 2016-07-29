@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v3.0.14
+    snversion: master_v3.0.15
     batmanversion: v2015.2
     common_required_packages:
       - git
@@ -51,11 +51,16 @@
       - l2tp_eth
     tunneldigger_scripts:
       - start-broker.sh
+      - start-broker-backup.sh
       - batdelif.sh
     tunneldigger_service:
       - tunneldigger.service
-    bind_zone_fftdf:
-      - named.conf.fftdf
+      - tunneldigger-backup.service
+    broker_cfg:
+      - l2tp_broker-backup.cfg
+      - l2tp_broker.cfg
+#    bind_zone_fftdf:
+#      - named.conf.fftdf
     check_gw_script:
       - keepalive.sh
     authorized_keys:
@@ -160,7 +165,8 @@
       pip: requirements=/srv/tunneldigger/broker/requirements.txt virtualenv=/srv/tunneldigger/
       when: tunneldigger.changed
     - name: Copy l2tp broker config template
-      template: src=./files/l2tp_broker.cfg.j2 dest=/srv/tunneldigger/l2tp_broker.cfg owner=root group=root mode=0444
+      template: src=./files/{{ item }} dest=/srv/tunneldigger owner=root group=root mode=0444
+      with_items: broker_cfg
       when: tunneldigger.changed
     - name: Copy tunneldigger script template
       template: src=./files/bataddif.sh.j2 dest=/srv/tunneldigger/bataddif.sh owner=root group=root mode=0500
@@ -169,8 +175,8 @@
       copy: src=./files/{{ item }} dest=/srv/tunneldigger owner=root group=root mode=0500
       with_items: tunneldigger_scripts
       when: tunneldigger.changed
-    - name: Copy tunneldigger service file
-      copy: src=./files/{{ item }} dest=/etc/systemd/system/tunneldigger.service owner=root group=root mode=0444
+    - name: Copy tunneldigger service template
+      copy: src=./files/{{ item }} dest=/etc/systemd/system owner=root group=root mode=0444
       with_items: tunneldigger_service
       when: tunneldigger.changed
     - name: Tunneldigger reload
@@ -178,6 +184,7 @@
       with_items:
       - systemctl daemon-reload
       - systemctl enable tunneldigger.service
+      - systemctl enable tunneldigger-backup.service
       when: tunneldigger.changed
     - name: Copy logrotate config
       copy: src=./files/{{ item }} dest=/etc/ owner=root group=root mode=0500
@@ -201,9 +208,9 @@
       template: src=./files/keepalive.exit.sh.j2 dest=/opt/freifunk/keepalive.sh owner=root group=root mode=0500
       register: check_gw
       when: sn_exit is defined
-    - name: Add cron job with check gateway script
-      cron: name=check_gw special_time=reboot job="/opt/freifunk/keepalive.sh > /dev/null 2>&1 &" user="root" 
-      when: check_gw.changed
+#    - name: Add cron job with check gateway script
+#      cron: name=check_gw special_time=reboot job="/opt/freifunk/keepalive.sh > /dev/null 2>&1 &" user="root" 
+#      when: check_gw.changed
     - name: Supernode Config script super- and exitnode
       copy: src=./files/supernode dest=/usr/bin/supernode owner=root group=root mode=0500
       when: sn_exit is defined
@@ -246,13 +253,18 @@
     - name: SSH authorized_keys
       copy: src=./files/{{ item }} dest=/root/.ssh owner=root group=root mode=0400
       with_items: authorized_keys
-    - name: Copy secondary zone file
-      copy: src=./files/{{ item }} dest=/etc/bind owner=root group=bind mode=644
-      with_items: bind_zone_fftdf
     - name: Bind9, activate fftdf zone
-      lineinfile: dest=/etc/bind/named.conf line='include "/etc/bind/named.conf.fftdf";' state=present
+      lineinfile: dest=/etc/bind/named.conf line='include "/etc/bind/fftdf/fftdf.conf";' state=present
     - name: Copy option template
       template: src=./files/named.conf.options.j2 dest=/etc/bind/named.conf.options owner=root group=bind mode=644
+    - name: Create fftdf directory
+      file: path=/etc/bind/fftdf state=directory
+    - name: Copy FFTDF Zones
+      copy: src=./files/fftdf/{{ item }} dest=/etc/bind/fftdf/{{ item }} owner=root group=bind mode=644
+      with_items: 
+        - fftdf.conf
+    - name: Copy fftdf Zone config template
+      template: src=./files/fftdf/db.fftdf.j2 dest=/etc/bind/fftdf/db.fftdf owner=radvd group=root mode=0444
     - name: Copy radvd config template
       template: src=./files/radvd.conf.j2 dest=/etc/radvd.conf owner=radvd group=root mode=0444
     - name: Interface configuration with ffrl gre tunnel
@@ -272,6 +284,10 @@
       get_url: url=https://raw.githubusercontent.com/MightySCollins/speedtest-cli/master/speedtest_cli.py dest=/usr/bin/speedtest-cli
     - name: Change rights speedtest-cli
       file: path=/usr/bin/speedtest-cli owner=root group=root mode=0755
+    - name: Copy Slacktee Config
+      template: src=./files/slacktee.conf.j2 dest=/etc/slacktee.conf owner=root group=root mode=0544
+    - name: Copy Slacktee
+      copy: src=./files/slacktee.sh dest=/usr/local/bin/slacktee.sh owner=root group=root mode=0744
     - name: set netfilter rules
       lineinfile: dest=/etc/sysctl.conf line="{{ item }}"
       with_items:

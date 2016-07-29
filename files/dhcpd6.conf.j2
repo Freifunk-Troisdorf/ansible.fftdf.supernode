@@ -6,17 +6,10 @@ authoritative;
 default-lease-time 300;
 max-lease-time 600;
 
-#option dhcp6.name-servers {{ sn_mesh_IPv6 }};
-option dhcp6.name-servers {{ sn_mesh_IPv6 }}, {{ sn_dhcp_dns_v6 }};
+option dhcp6.name-servers {{ sn_mesh_IPv6 }};
 
 option dhcp6.domain-search "fftdf";
 
-subnet6 2a03:2260:121::/64 {
-#
-#       # Range for clients
-#       range6 2a03:2260:121::201 2a03:2260:121::ffff;
-#
-#       # Range for clients requesting a temporary address
-#       range6 2a03:2260:121::/64 temporary;
+subnet6 {{ sn_mesh_IPv6_net }} {
 }
 

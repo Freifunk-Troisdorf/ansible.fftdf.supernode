@@ -6,79 +6,82 @@ while [ true ] ; do
 	iam=$(/bin/hostname)
 	day=$(date +%d)
 	BATCTL=/usr/local/sbin/batctl
-	active_SN=$iam
 	#### Settings ####
 	# Names of the 2 Supernodes #
-	loadbalance=$(cat /etc/supernode-status/loadbalancing.mode)
-	if [ $iam = "troisdorf5" ]; then
+	if [ $iam = "troisdorf4" ]; then
+		my_SN_IP=185.66.193.104
+		other_SN_IP=185.66.193.105
+		other_SN_DNS=5.fftdf.de
+		meship=10.188.0.4
+		SN1=troisdorf4
+		SN2=troisdorf5
+		slack="/usr/local/bin/slacktee.sh -u troisdorf4"
+	elif [ $iam = "troisdorf5" ]; then
 		my_SN_IP=185.66.193.105
 		other_SN_IP=185.66.193.106
-		meship=10.188.255.5
+		other_SN_DNS=6.fftdf.de
+		meship=10.188.32.5
 		SN1=troisdorf5
 		SN2=troisdorf6
+		slack="/usr/local/bin/slacktee.sh -u troisdorf5"
 	elif [ $iam = "troisdorf6" ]; then
 		my_SN_IP=185.66.193.106
-		other_SN_IP=185.66.193.105
-		meship=10.188.255.6
-		SN1=troisdorf5
-		SN2=troisdorf6
-	elif [ $iam = "troisdorf1" ]; then
-		my_SN_IP=185.66.193.101
-		other_SN_IP=185.66.193.102
-		meship=10.188.255.1
-		SN1=troisdorf1
-		SN2=troisdorf2
-	elif [ $iam = "troisdorf2" ]; then
-		my_SN_IP=185.66.193.102
-		other_SN_IP=185.66.193.101
-		meship=10.188.255.2
-		SN1=troisdorf1
-		SN2=troisdorf2
+		other_SN_IP=185.66.193.104
+		other_SN_DNS=4.fftdf.de
+		meship=10.188.64.6
+		SN1=troisdorf6
+		SN2=troisdorf4
+		slack="/usr/local/bin/slacktee.sh -u troisdorf6"
+	elif [ $iam = "troisdorf7" ]; then
+		my_SN_IP=185.66.193.107
+		other_SN_IP=185.66.193.104
+		other_SN_DNS=4.fftdf.de
+		meship=10.188.92.7
+		SN1=troisdorf7
+		SN2=troisdorf4
+		slack="/usr/local/bin/slacktee.sh -u troisdorf7"
 	fi
-	if [ $loadbalance = "1" ] && [ $mode != "0" ]; then
-		if [ $day -gt 15 ]; then
-			active_SN=$SN1
-		else
-			active_SN=$SN2
-		fi
-	fi
-
-
 ##################
 # functions #
 # Supernode off #
 	supernode_off () {
-	    $BATCTL gw off
+	    /usr/local/sbin/batctl gw off
 		/usr/sbin/service bird6 stop
 		/usr/sbin/service bird stop
 		/usr/sbin/service tunneldigger stop
+		/usr/sbin/service tunneldigger-backup stop
 		/usr/sbin/service radvd stop
 		/usr/sbin/service isc-dhcp-server stop
-		if [ $loadbalance == 1 ] && [ $mode != 0 ]; then
-			echo 3 > /etc/supernode-status/supernode.status
-		else
-			echo 0 > /etc/supernode-status/supernode.status
-		fi
+		echo 0 > /etc/supernode-status/supernode.status
 		echo "collectd.gateways.$iam.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
 # Supernode on #
 	supernode_on () {
-		$BATCTL gw server 100Mbit/100Mbit
+		/usr/local/sbin/batctl gw server 100Mbit/100Mbit
 	    /usr/sbin/service bird6 start
 	    /usr/sbin/service bird start
 	    /usr/sbin/service tunneldigger start
+	    /usr/sbin/service tunneldigger-backup stop
 	    /usr/sbin/service radvd start
 	    /usr/sbin/service isc-dhcp-server start
-	    if [ $loadbalance == 1 ]; then
-			echo 1 > /etc/supernode-status/supernode.status
-		else
-			echo 2 > /etc/supernode-status/supernode.status
-		fi
+	    echo 1 > /etc/supernode-status/supernode.status
+	    echo "collectd.gateways.$iam.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
+	}
+# Supernode Backup Mode
+	supernode_backup () {
+		/usr/local/sbin/batctl gw server 100Mbit/100Mbit
+	    /usr/sbin/service bird6 start
+	    /usr/sbin/service bird start
+	    /usr/sbin/service tunneldigger start
+	    /usr/sbin/service tunneldigger-backup start
+	    /usr/sbin/service radvd start
+	    /usr/sbin/service isc-dhcp-server start
+	    echo 2 > /etc/supernode-status/supernode.status
 	    echo "collectd.gateways.$iam.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
 # Restart Services #
 	supernode_fail () {
-		$BATCTL gw off
+		/usr/local/sbin/batctl gw off
 		/usr/sbin/service bird6 restart
 		/usr/sbin/service bird restart
 		/usr/sbin/service tunneldigger restart
@@ -88,34 +91,32 @@ while [ true ] ; do
 		echo "collectd.gateways.$iam.sn-status $online `date +%s`" | nc -q 0 10.188.1.27 2003
 	}
 #Check other Supernode
-	if [ $iam != $active_SN ]; 
-	then
-		ping -q -c5 $other_SN_IP -I eth0 > /dev/null
-		if [ $? -eq 0 ] 
-		then
-	    	if [ $online ==1 ] || [ $online = 2 ]; then
-	    		curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode wieder online. Ich habe mich wieder ausgeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
-	    	fi
-	    	supernode_off
-		else
-			supernode_on
-			curl -X POST --data-urlencode 'payload={"text": "Aktiver Supernode offline. Ich habe mich eingeschaltet", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
-			sleep 300
-		fi
-	else
-# Check this Supernode
-		if [ $mode != "0" ]; then
-			ping -q -c5 $my_SN_IP -I eth0 > /dev/null
-			if [ $? -eq 0 ] 
-			then
-			    if [ $online = 0 ] || [ $online = 3 ]; then
-			    	curl -X POST --data-urlencode 'payload={"text": "Ich bin jetzt Supernode!", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":white_check_mark:"}' https://hooks.slack.com/services/{{ slack_token }}
-			    fi
-			    supernode_on
+	if [ $mode != "0" ]; then
+		if [ $mode = "1" ]; then
+			/bin/nc -zvu $other_SN_DNS 53842
+			if [ $? -eq 0 ]; then
+		    	if [ $online = 2 ]; then
+		    		echo "Supernode wieder online. Backup Modus abgeschaltet" | $slack
+		    		supernode_on
+		    	fi
 			else
-				supernode_fail
-				curl -X POST --data-urlencode 'payload={"text": "Ich konnte mich selbst nicht anpingen. Ich versuche mal die Services neu zu starten", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":warning:"}' https://hooks.slack.com/services/{{ slack_token }}
+				supernode_backup
+				echo "Supernode offline. Backup modus eingeschaltet" | $slack
 			fi
+		fi
+# Check this Supernode
+		/bin/ping -q -c5 $my_SN_IP -I eth0 > /dev/null
+		if [ $? -eq 0 ]; then
+		    if [ $online = 0 ]; then
+		    	echo "Ich bin jetzt Supernode!" | $slack
+		    elif [ $mode = 1 ]; then
+		    	supernode_on
+			elif [ $mode = 2 ]; then
+				supernode_backup
+			fi
+		else
+			supernode_fail
+			echo "Ich konnte mich selbst nicht anpingen. Ich versuche mal die Services neu zu starten" | $slack
 		fi
 	fi
 # Supernode off
@@ -127,17 +128,20 @@ while [ true ] ; do
     do
         x=`pidof $service`;
         if [ "$x" = "" ]; then 
-                echo "collectd.gateways.$iam.$service 0 `date +%s`" | nc -q 0 10.188.1.27 2003
-                echo 0 > /etc/supernode-status/"$service".status
+            echo "collectd.gateways.$iam.$service 0 `date +%s`" | nc -q 0 10.188.1.27 2003
+            echo 0 > /etc/supernode-status/"$service".status
         else
-                echo "collectd.gateways.$iam.$service 1 `date +%s`" | nc -q 0 10.188.1.27 2003
-                echo 1 > /etc/supernode-status/"$service".status
+            echo "collectd.gateways.$iam.$service 1 `date +%s`" | nc -q 0 10.188.1.27 2003
+            echo 1 > /etc/supernode-status/"$service".status
         fi
     done
 # Check DNS Server
-   	host google.de $meship
+   	/usr/bin/host google.de $meship
    	if [ "$?" != "0" ]; then
    		service bind9 restart
+   		if [ $mode != "0" ]; then
+   			echo "DNS Server läuft nicht! Versuche neu zu starten!" | $slack
+   		fi
    	fi
 #Check Tunneldigger Connections
 	if ! [ -d /opt/freifunk/tunneldigger_interfaces ]; then

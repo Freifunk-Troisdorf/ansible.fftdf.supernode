@@ -1,0 +1,25 @@
+;; db.fftdf
+;; Forwardlookupzone für .fftdf
+;;
+$TTL 600
+@       IN      SOA     fftdf. root.fftdf. (
+                        2015584543      ; Serial
+                                8H      ; Refresh
+                                2H      ; Retry
+                                4W      ; Expire
+                                3H )    ; NX (TTL Negativ Cache)
+
+@                               IN      NS      {{ sn_hostname }}.infra.fftdf.
+                                IN      A       {{ sn_mesh_IPv4 }}
+                                IN      AAAA	{{ sn_mesh_IPv6 }}
+localhost			IN	A    	127.0.0.1
+				IN  	AAAA    ::1
+nextnode			IN  	A       10.188.0.1
+				IN  	AAAA    2a03:2260:121::1
+;;This Supernode
+{{ sn_hostname }}.infra		IN	A	{{ sn_mesh_IPv4 }}
+				IN	AAAA	{{ sn_mesh_IPv6 }}
+;; Update Servers
+update1.infra			IN      AAAA    2a03:2260:121::22
+update2.infra			IN      AAAA    2a03:2260:121::23
+update3.infra			IN      AAAA    2a03:2260:121::24

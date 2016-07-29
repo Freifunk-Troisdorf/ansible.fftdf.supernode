@@ -3,8 +3,7 @@ interface bat0 {
         IgnoreIfMissing on;
         MaxRtrAdvInterval 200;
         RDNSS {{ sn_mesh_IPv6 }} {};
-#        prefix fda0:747e:ab29:7405::/64 {
-        prefix 2a03:2260:121::/64 {
+	prefix {{ sn_mesh_IPv6_net }} {
                 AdvOnLink on;
                 AdvAutonomous on;
                 AdvRouterAddr on;

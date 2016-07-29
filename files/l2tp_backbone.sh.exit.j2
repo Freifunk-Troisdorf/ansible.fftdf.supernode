@@ -1,55 +1,41 @@
 #!/bin/sh
-# Version 6
-# Der servername muss mit einer einstelligen Zahl aufhoeren!!!!!
-communityname="troisdorf"
-server="troisdorf1 troisdorf2 troisdorf3 troisdorf4 troisdorf5 troisdorf6 troisdorf7 troisdorf8 troisdorf9"
-#server="troisdorf7 {{ sn_hostname }}"
-domain="freifunk-troisdorf.de"
-mtu={{ sn_mtu }}
-# community MAC address, without the last Byte (:)!
-communitymacaddress="a2:8c:ae:6f:f6"
-tunnelPrefix=10
-sessionPrefix=1
-# Netzwerkteil des Netzes, ohne abschliessenden Punkt
-communitynetwork="10.188"
-# IPv6 network
-#communitynetworkv6="fda0:747e:ab29:7405:255::"
-communitynetworkv6="2a03:2260:121::"
-# Drittes Octet des serverbereichs
-octet3rd="255"
-# CIDR muss /16 sein
-localserver=$(/bin/hostname)
-batadv=/usr/local/sbin/batadv-vis
+# Version 9
+sleep 60
 batctl=/usr/local/sbin/batctl
 ip=/sbin/ip
-dig=/usr/bin/dig
+communitymacaddress="a2:8c:ae:6f:f6"
+localserver=$(/bin/hostname)
+communityname=troisdorf
 
-for i in $server; do
-(
-        for j in $server; do
-                if [ $i  != $j ]; then
-                        if [ $i = $localserver ]; then
-                                 ip l2tp add tunnel remote $($dig +short $j.$domain) local $(/bin/hostname  -I | /usr/bin/cut -f1 -d' ') tunnel_id $tunnelPrefix${i#$communityname}${j#$communityname} peer_tunnel_id $tunnelPrefix${j#$communityname}${i#$communityname} encap udp udp_sport 300${i#$communityname}${j#$communityname} udp_dport 300${j#$communityname}${i#$communityname}
-                                 ip l2tp add session name l2tp-$j tunnel_id $tunnelPrefix${i#$communityname}${j#$communityname} session_id $sessionPrefix${i#$communityname}${j#$communityname} peer_session_id $sessionPrefix${j#$communityname}${i#$communityname}
-                                 #ip link set address $communitymacaddress:${i#$communityname}${j#$communityname} dev l2tp-$j
-                                 ip link set dev l2tp-$j mtu $mtu
-                                 ip link set up l2tp-$j
-                                 $batctl if add l2tp-$j
-                        fi
-                fi
-        done
-)
-done
+# L2tp to Map
+$ip l2tp add tunnel remote 138.201.70.103 local $(/bin/hostname -I | /usr/bin/cut -f1 -d' ') tunnel_id {{ sn_number }}0 peer_tunnel_id 0{{ sn_number }} encap udp udp_sport 300{{ sn_number }}0 udp_dport 3000{{ sn_number }}
+$ip l2tp add session name l2tp-map tunnel_id {{ sn_number }}0 session_id 1{{ sn_number }}0 peer_session_id 2{{ sn_number }}0
+$ip link set dev l2tp-map mtu 1312
+$ip link set up l2tp-map
+$batctl if add l2tp-map
 
-# Rest starten
+# Rest Starten
 $ip link set address $communitymacaddress:0${localserver#$communityname} dev bat0
 $ip link set up dev bat0
-$ip addr add $communitynetwork.$octet3rd.${localserver#$communityname}/16 broadcast $communitynetwork.255.255 dev bat0
-$ip -6 addr add $communitynetworkv6$octet3rd:${localserver#$communityname}/64 dev bat0
-$ip route add {{ snx_ffrl_IPv4 }}/32 via {{ snx_mesh_IPv4 }} table 42
-$ip route add {{ snx_ffrl_IPv4 }}/32 via {{ snx_mesh_IPv4 }}
+$ip addr add {{ sn_mesh_IPv4 }}/19 broadcast {{ sn_mesh_IPv4_brcast }} dev bat0
+$ip -6 addr add {{ sn_mesh_IPv6 }}/64 dev bat0
+$ip route add 10.188.0.0/16 via {{ sn_mesh_IPv4_xfer }} table 42
+$ip route add 10.188.0.0/16 via {{ sn_mesh_IPv4_xfer }}
+
+$ip -6 route add 2a03:2260:121:4000::/52 via {{ sn_mesh_IPv6_xfer }} table 42
+$ip -6 route add 2a03:2260:121:5000::/52 via {{ sn_mesh_IPv6_xfer }} table 42
+$ip -6 route add 2a03:2260:121:6000::/52 via {{ sn_mesh_IPv6_xfer }} table 42
+$ip -6 route add 2a03:2260:121:7000::/52 via {{ sn_mesh_IPv6_xfer }} table 42
 
 /usr/bin/killall batadv-vis
 /bin/sleep 15
 $batadv -i bat0 -s > /dev/null 2>&1 &
+/bin/sleep 15
+/usr/sbin/service tunneldigger restart
+/usr/sbin/service bind9 restart
+/usr/sbin/service bird restart
+/usr/sbin/service bird6 restart
+/usr/sbin/service isc-dhcp-server restart
+/usr/sbin/service radvd restart
+$batctl gw server 100Mbit/100Mbit
 

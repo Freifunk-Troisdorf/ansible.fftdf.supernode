@@ -1,50 +1,61 @@
 #!/bin/bash
 help () {
 echo "Supernode Settings:"
-echo "status | off | on | auto"
+echo "status | off | on | backup | backup_off"
 }
 
 status () {
 	supernode_status=$(/bin/cat /etc/supernode-status/supernode.status)
 	supernode_mode=$(/bin/cat /etc/supernode-status/supernode.mode)
-	loadbalancing=$(cat /etc/supernode-status/loadbalancing.mode)
 
-	echo "Supernode Status: (Ist-Zustand)"
+	echo -e "\nSupernode Status: (Ist-Zustand)"
 	if [ $supernode_status == 0 ]; then
-		echo "Supernode ist Offline"
+		echo "Supernode ist Abgeschaltet"
 	elif [ $supernode_status == 1 ]; then
-		echo "Supernode läuft (Loadbalancing)"
+		echo "Supernode läuft (Automatik inkl. Backup)"
 	elif [ $supernode_status == 2 ]; then
-		echo "Supernode läuft (Dauer-Ein)"
+		echo "Supernode läuft (Backup Netz Aktiv)"
 	elif [ $supernode_status == 3 ]; then
-		echo "Supernode Offline (Loadbalancing)"
+		echo "Supernode läuft (Backup deaktiviert)"	
 	fi
+	echo -e "\nSupernode Status: (Soll-Zustand)"
+	if [ $supernode_mode == 0 ]; then
+		echo "Supernode ist Abgeschaltet"
+	elif [ $supernode_mode == 1 ]; then
+		echo "Supernode läuft (Automatik inkl. Backup)"
+	elif [ $supernode_mode == 2 ]; then
+		echo "Supernode läuft (Backup Netz Aktiv)"
+	elif [ $supernode_mode == 3 ]; then
+		echo "Supernode läuft (Backup deaktiviert)"
+	fi
+	echo -e "\nService Status"
 	for service in bird bird6 dhcpd radvd python named
     do
     	if [ "$(/bin/cat /etc/supernode-status/$service.status)" = "1" ]; then
-    		echo -e "$service \e[1;4;93mläuft\e[0m"
+    		echo -e "$service läuft"
     	else
-    		echo -e "$service \e[1;4;91mläuft nicht\e[0m"
+    		echo -e "$service aus"
     	fi
     done
 }
 
 off () {
 	echo 0 > /etc/supernode-status/supernode.mode
-	echo 0 > /etc/supernode-status/loadbalancing.mode
-	
 	echo "Supernode Aus"
 }
 
 on () {
 	echo 1 > /etc/supernode-status/supernode.mode
-	echo 0 > /etc/supernode-status/loadbalancing.mode
-	echo "Supernode Dauer-An"
+	echo "Supernode An"
 }
 
-auto () {
-	echo 1 > /etc/supernode-status/loadbalancing.mode
-	echo 1 > /etc/supernode-status/supernode.mode
-	echo "Supernode Aktiviert inkl. Loadbalance"
+backup () {
+	echo 2 > /etc/supernode-status/supernode.mode
+	echo "Supernode Aktiviert inkl. Backup"
+}
+
+backup_off () {
+	echo 3 > /etc/supernode-status/supernode.mode
+	echo "Supernode Aktiviert (Backup deaktiviert)"
 }
 $1
