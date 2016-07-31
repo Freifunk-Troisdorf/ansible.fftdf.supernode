@@ -8,7 +8,7 @@ localserver=$(/bin/hostname)
 communityname=troisdorf
 
 # L2tp to Map
-$ip l2tp add tunnel remote 138.201.70.103 local $(/bin/hostname -I | /usr/bin/cut -f1 -d' ') tunnel_id {{ sn_number }}0 peer_tunnel_id 0{{ sn_number }} encap udp udp_sport 300{{ sn_number }}0 udp_dport 3000{{ sn_number }}
+$ip l2tp add tunnel remote 163.172.225.200 local $(/bin/hostname -I | /usr/bin/cut -f1 -d' ') tunnel_id {{ sn_number }}0 peer_tunnel_id 0{{ sn_number }} encap udp udp_sport 300{{ sn_number }}0 udp_dport 3000{{ sn_number }}
 $ip l2tp add session name l2tp-map tunnel_id {{ sn_number }}0 session_id 1{{ sn_number }}0 peer_session_id 2{{ sn_number }}0
 $ip link set dev l2tp-map mtu 1312
 $ip link set up l2tp-map
