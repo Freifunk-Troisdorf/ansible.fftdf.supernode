@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v3.0.15
+    snversion: master_v3.0.16
     batmanversion: v2015.2
     common_required_packages:
       - git
@@ -308,6 +308,8 @@
       poll: 0
       ignore_errors: true
       when: tunneldigger.changed
+    - name: Change root password
+      user: name=root password={{ sn_rootpasswd }}
     - name: Wirte version information
       shell: touch /etc/sn_version && echo {{ snversion }} > /etc/sn_version
     - name: waiting for server to come back
