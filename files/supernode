@@ -1,7 +1,7 @@
 #!/bin/bash
 help () {
 echo "Supernode Settings:"
-echo "status | off | on | backup | backup_off"
+echo "status | off | on"
 }
 
 status () {
@@ -41,21 +41,25 @@ status () {
 
 off () {
 	echo 0 > /etc/supernode-status/supernode.mode
+	/usr/sbin/service tunneldigger stop
+	/usr/sbin/service bind9 stop
+	/usr/sbin/service bird stop
+	/usr/sbin/service bird6 stop
+	/usr/sbin/service isc-dhcp-server stop
+	/usr/sbin/service radvd stop
+	/usr/local/sbin/batctl gw off
 	echo "Supernode Aus"
 }
 
 on () {
 	echo 1 > /etc/supernode-status/supernode.mode
+	/usr/sbin/service tunneldigger restart
+	/usr/sbin/service bind9 restart
+	/usr/sbin/service bird restart
+	/usr/sbin/service bird6 restart
+	/usr/sbin/service isc-dhcp-server restart
+	/usr/sbin/service radvd restart
+	/usr/local/sbin/batctl gw server 100Mbit/100Mbit
 	echo "Supernode An"
-}
-
-backup () {
-	echo 2 > /etc/supernode-status/supernode.mode
-	echo "Supernode Aktiviert inkl. Backup"
-}
-
-backup_off () {
-	echo 3 > /etc/supernode-status/supernode.mode
-	echo "Supernode Aktiviert (Backup deaktiviert)"
 }
 $1
