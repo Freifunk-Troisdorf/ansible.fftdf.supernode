@@ -2,4 +2,9 @@ TODO
 
 1. Check_mk Agent installieren
 2. Check_Mk Local checks 
-File: dhcpleases kopieren nach /opt/freifunk/dhcpleases und ausführbar machen
+3. File: dhcpleases kopieren nach /opt/freifunk/dhcpleases und ausführbar machen
+4. Check_mk Local Checks:
+    4.1  /usr/lib/check_mk_agent/local/supernode kopieren und ausführbar machen (file: check_mk-supernode)
+    4.2  /usr/lib/check_mk_agent/local/3600/speedtest-cli kopieren und ausführbar machen (file: check_mk-speedtest-cli)
+    4.3 /usr/lib/check_mk_agent/local/3600/dhcp.sh kopieren und ausführbar machen (file: check_mk-dhcp.sh)
+5. Check_Mk config zugriffe nur von unserem Check_mk zulassen (file: check_mk.conf) nach /etc/xinted.d/check_mk
