@@ -2,3 +2,4 @@ TODO
 
 1. Check_mk Agent installieren
 2. Check_Mk Local checks 
+File: dhcpleases kopieren nach /opt/freifunk/dhcpleases und ausführbar machen
