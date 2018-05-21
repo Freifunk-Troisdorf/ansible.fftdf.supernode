@@ -39,3 +39,5 @@ ip -6 route add 2a03:2260:121:6000::/64 via 2a03:2260:121:7000::2 table 42
 ==================================================================
 
 2. Freifunk Yanic Installieren
+
+3. chmod 644 /etc/logrotate.conf
