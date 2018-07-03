@@ -308,6 +308,11 @@
       poll: 0
       ignore_errors: true
       when: tunneldigger.changed
+    - file:
+      path: /etc/logrotate.conf 
+      owner: root
+      group: root
+      mode: 0644
     - name: Change root password
       user: name=root password={{ sn_rootpasswd }}
     - name: Wirte version information
