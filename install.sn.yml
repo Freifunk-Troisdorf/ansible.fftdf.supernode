@@ -10,7 +10,7 @@
   gather_facts: False
   vars:
     snversion: master_v3.0.16
-    batmanversion: v2015.2
+    batmanversion: v2017.4
     common_required_packages:
       - git
       - make
@@ -41,6 +41,9 @@
       - psmisc
       - dnsutils
       - ntp
+      - libnl-genl-3-dev
+      - virtualenv
+      - linux-image-extra-4.4.0-127-generic
     modules_required:
       - batman-adv
       - nf_conntrack_netlink
@@ -118,14 +121,14 @@
       register: aptupdates
     - name: Set clock
       shell: /etc/init.d/ntp stop && /usr/sbin/ntpd -q -g && /etc/init.d/ntp start
-    - name: Add modules
-      lineinfile: dest=/etc/modules line={{ item }}
-      with_items: modules_required
-      register: modules_req
-    - name: Load modules
-      modprobe: name={{ item }}
-      with_items: modules_required
-      when: modules_req.changed
+#    - name: Add modules
+#      lineinfile: dest=/etc/modules line={{ item }}
+#      with_items: modules_required
+#      register: modules_req
+#    - name: Load modules
+#      modprobe: name={{ item }}
+#      with_items: modules_required
+#      when: modules_req.changed
     - name: Install Linux headers
       shell: >
         apt-get install linux-headers-$(uname -r) -y
@@ -179,6 +182,16 @@
       copy: src=./files/{{ item }} dest=/etc/systemd/system owner=root group=root mode=0444
       with_items: tunneldigger_service
       when: tunneldigger.changed
+##########
+    - name: Add modules
+      lineinfile: dest=/etc/modules line={{ item }}
+      with_items: modules_required
+      register: modules_req
+    - name: Load modules
+      modprobe: name={{ item }}
+      with_items: modules_required
+      when: modules_req.changed
+#########
     - name: Tunneldigger reload
       command: "{{item}}"
       with_items:
@@ -308,6 +321,8 @@
       poll: 0
       ignore_errors: true
       when: tunneldigger.changed
+    - name: Logrotate rights
+      file: path=/etc/logrotate.conf mode=0644 owner=root group=root
     - name: Change root password
       user: name=root password={{ sn_rootpasswd }}
     - name: Wirte version information

@@ -1,0 +1,43 @@
+TODO
+
+1. Statisches Routing über Interconnect Router
+
+==================================================================
+# SN 4
+# FFTDF Interconnect Routen
+ip route add 10.188.32.0/19 via 10.188.0.2 table 42
+ip route add 10.188.64.0/19 via 10.188.0.2 table 42
+ip route add 10.188.96.0/19 via 10.188.0.2 table 42
+ip -6 route add 2a03:2260:121:5000::/64 via 2a03:2260:121:4000::2 table 42
+ip -6 route add 2a03:2260:121:6000::/64 via 2a03:2260:121:4000::2 table 42
+ip -6 route add 2a03:2260:121:7000::/64 via 2a03:2260:121:4000::2 table 42
+# SN 5
+# FFTDF Interconnect Routen
+ip route add 10.188.0.0/19 via 10.188.32.2 table 42
+ip route add 10.188.64.0/19 via 10.188.32.2 table 42
+ip route add 10.188.96.0/19 via 10.188.32.2 table 42
+ip -6 route add 2a03:2260:121:4000::/64 via 2a03:2260:121:5000::2 table 42
+ip -6 route add 2a03:2260:121:6000::/64 via 2a03:2260:121:5000::2 table 42
+ip -6 route add 2a03:2260:121:7000::/64 via 2a03:2260:121:5000::2 table 42
+# SN 6
+# FFTDF Interconnect Routen
+ip route add 10.188.0.0/19 via 10.188.64.2 table 42
+ip route add 10.188.32.0/19 via 10.188.64.2 table 42
+ip route add 10.188.96.0/19 via 10.188.64.2 table 42
+ip -6 route add 2a03:2260:121:4000::/64 via 2a03:2260:121:6000::2 table 42
+ip -6 route add 2a03:2260:121:5000::/64 via 2a03:2260:121:6000::2 table 42
+ip -6 route add 2a03:2260:121:7000::/64 via 2a03:2260:121:6000::2 table 42
+# SN 7
+# FFTDF Interconnect Routen
+ip route add 10.188.0.0/19 via 10.188.96.2 table 42
+ip route add 10.188.32.0/19 via 10.188.96.2 table 42
+ip route add 10.188.64.0/19 via 10.188.96.2 table 42
+ip -6 route add 2a03:2260:121:4000::/64 via 2a03:2260:121:7000::2 table 42
+ip -6 route add 2a03:2260:121:5000::/64 via 2a03:2260:121:7000::2 table 42
+ip -6 route add 2a03:2260:121:6000::/64 via 2a03:2260:121:7000::2 table 42
+
+==================================================================
+
+2. Freifunk Yanic Installieren
+
+3. chmod 644 /etc/logrotate.conf
