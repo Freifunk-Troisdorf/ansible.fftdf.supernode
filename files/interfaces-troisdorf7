@@ -13,21 +13,20 @@ iface lo inet6 loopback
 
 
 # The primary network interface
-allow-hotplug eth0
-iface eth0 inet static
-        address 212.83.154.70
-        netmask 255.255.255.255
-        gateway 163.172.42.1
-        pointopoint 163.172.42.1
+allow-hotplug ens18
+iface ens18 inet static
+        address 93.241.53.100
+        netmask 255.255.255.0
+        gateway 93.241.53.1
         post-up iptables -P OUTPUT ACCEPT
-        post-up iptables -A OUTPUT -o eth0 -d 10.0.0.0/8 -j DROP
-        post-up iptables -A OUTPUT -o eth0 -d 172.16.0.0/12 -j DROP
-        post-up iptables -A OUTPUT -o eth0 -d 169.254.0.0/16 -j DROP
-        post-up iptables -A OUTPUT -o eth0 -d 192.168.0.0/16 -j DROP
-        post-up iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-auto 6to4
-        iface 6to4 inet6 6to4
-        local 212.83.154.70
+        post-up iptables -A OUTPUT -o $IFACE -d 10.0.0.0/8 -j DROP
+        post-up iptables -A OUTPUT -o $IFACE -d 172.16.0.0/12 -j DROP
+        post-up iptables -A OUTPUT -o $IFACE -d 169.254.0.0/16 -j DROP
+        post-up iptables -A OUTPUT -o $IFACE -d 192.168.0.0/16 -j DROP
+        post-up iptables -t nat -A POSTROUTING -o $IFACE -j MASQUERADE
+#auto 6to4
+#        iface 6to4 inet6 6to4
+#        local 212.83.154.70
 
 # GRE Tunnel zum Rheinland Backbone
 # - Die Konfigurationsdaten werden vom Rheinland Backbone vergeben und zugewiesen

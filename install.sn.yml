@@ -21,7 +21,6 @@
       - libnl-3-dev
       - libjansson-dev
       - isc-dhcp-server
-      - collectd
       - libcap-dev
       - iproute
       - libnetfilter-conntrack3
@@ -43,7 +42,8 @@
       - ntp
       - libnl-genl-3-dev
       - virtualenv
-      - linux-image-extra-4.4.0-127-generic
+      - batman-adv
+      - batctl
     modules_required:
       - batman-adv
       - nf_conntrack_netlink
@@ -64,23 +64,32 @@
       - l2tp_broker.cfg
 #    bind_zone_fftdf:
 #      - named.conf.fftdf
-    check_gw_script:
-      - keepalive.sh
+#    check_gw_script:
+#      - keepalive.sh
     authorized_keys:
       - authorized_keys
     logrotate_config:
       - logrotate.conf
-    supernode_config:
-      - supernode.mode
-      - loadbalancing.mode
+#    supernode_config:
+#      - supernode.mode
+#      - loadbalancing.mode
 
   tasks:
     - name: Remove cdrom in sources.list
       raw: "sed -i '/deb cdrom/c\\#' /etc/apt/sources.list"
     - name: Make this server ansible compatible
-      raw: "apt-get update && apt-get install python -y"
-#    - name: Add backport repo to source list #target: /etc/apt/sources.list.d
-#      apt_repository: repo='deb http://http.debian.net/debian jessie-backports main' state=present 
+      raw: "apt-get update && apt-get install python apt-transport-https dirmngr -y"
+    - name: Adding Freifuck GPG Key
+      raw: "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B2522557E6AB9BF5"
+#      apt_key:
+#             id: B2522557E6AB9BF5
+#             url: https://keyserver.ubuntu.com
+#             url: https://pool.sks-keyservers.net
+#             url: https://sks.pod01.fleetstreetops.com
+#             state: present
+
+    - name: Add backport repo to source list
+      apt_repository: repo='deb https://freifuck.de/debian stretch main' state=present 
     - name: Update apt cache
       apt: update_cache=yes
     - name: Gathering facts
@@ -100,7 +109,7 @@
       shell: update-grub2
       when: grubnosmp.changed
     - name: Reboot the server
-      shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+      shell: sleep 2 && shutdown -r now "Ansible updates triggered, no SMP"
       async: 1
       poll: 0
       ignore_errors: true
@@ -114,10 +123,13 @@
                    timeout=300
       when: hosts.changed
       when: sethostname.changed
-    - apt: update_cache=yes
+#    - apt: update_cache=yes
     - name: Install common required packages
-      apt: state=installed pkg={{ item }}
-      with_items: common_required_packages
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      with_items: "{{ common_required_packages }}"
       register: aptupdates
     - name: Set clock
       shell: /etc/init.d/ntp stop && /usr/sbin/ntpd -q -g && /etc/init.d/ntp start
@@ -129,68 +141,70 @@
 #      modprobe: name={{ item }}
 #      with_items: modules_required
 #      when: modules_req.changed
-    - name: Install Linux headers
-      shell: >
-        apt-get install linux-headers-$(uname -r) -y
-      when: aptupdates.changed
-    - name: Get batman-adv
-      git: repo=https://git.open-mesh.org/batman-adv.git
-           dest=/tmp/batman-adv
-      when: aptupdates.changed
-      register: getbatman
+#    - name: Install Linux headers
+#      shell: >
+#        apt-get install linux-headers-$(uname -r) -y
+#      when: aptupdates.changed
+#    - name: Get batman-adv
+#      git: repo=https://git.open-mesh.org/batman-adv.git
+#           dest=/tmp/batman-adv
+#      when: aptupdates.changed
+#      register: getbatman
 #    - name: Get batman-adv no rebrotcast patch
 #      get_url: url=http://map.freifunk-moehne.de/stuff/1001-batman-adv-introduce-no_rebroadcast-option.patch dest=/tmp/batman-adv/1001-batman-adv-introduce-no_rebroadcast-option.patch
 #      when: getbatman.changed
-    - name: Install batman-adv
-      shell: cd /tmp/batman-adv && git checkout {{ batmanversion }} && make && make install
+#    - name: Install batman-adv
+#      shell: cd /tmp/batman-adv && git checkout {{ batmanversion }} && make && make install
 #      shell: cd /tmp/batman-adv && git checkout {{ batmanversion }} && git apply 1001-batman-adv-introduce-no_rebroadcast-option.patch && make && make install
-      when: getbatman.changed
-    - name: Get batctl
-      git: repo=http://git.open-mesh.org/batctl.git
-           dest=/tmp/batctl
-      when: aptupdates.changed
-      register: getbatctl
-    - name: Install batctl
-      shell: cd /tmp/batctl && git checkout {{ batmanversion }} && make && make install
-      when: getbatctl.changed
+#      when: getbatman.changed
+#    - name: Get batctl
+#      git: repo=http://git.open-mesh.org/batctl.git
+#           dest=/tmp/batctl
+#      when: aptupdates.changed
+#      register: getbatctl
+#    - name: Install batctl
+#      shell: cd /tmp/batctl && git checkout {{ batmanversion }} && make && make install
+#      when: getbatctl.changed
     - name: Get Tunneldigger
-#      git: repo=https://github.com/wlanslovenija/tunneldigger.git
-      git: repo=https://github.com/ffrl/tunneldigger.git
-           dest=/srv/tunneldigger
+      git: repo=https://github.com/Freifunk-Troisdorf/tunneldigger.git dest=/srv/tunneldigger
+#      git: repo=https://github.com/wlanslovenija/tunneldigger.git dest=/srv/tunneldigger version=v0.3.0
+#      git: repo=https://github.com/ffrl/tunneldigger.git dest=/srv/tunneldigger
+#           version: release-0.22
       register: tunneldigger
       when: aptupdates.changed
     - name: Configure tunneldigger
       command: "{{item}}"
       with_items:
-       - virtualenv /srv/tunneldigger/ -p python2.7
+#       - virtualenv /srv/tunneldigger/ -p python2.7
+      - virtualenv /srv/tunneldigger/
       when: tunneldigger.changed
     - name: Tunneldigger requirements
       pip: requirements=/srv/tunneldigger/broker/requirements.txt virtualenv=/srv/tunneldigger/
       when: tunneldigger.changed
     - name: Copy l2tp broker config template
       template: src=./files/{{ item }} dest=/srv/tunneldigger owner=root group=root mode=0444
-      with_items: broker_cfg
+      with_items: "{{ broker_cfg }}"
       when: tunneldigger.changed
     - name: Copy tunneldigger script template
       template: src=./files/bataddif.sh.j2 dest=/srv/tunneldigger/bataddif.sh owner=root group=root mode=0500
       when: tunneldigger.changed
     - name: Copy tunneldigger scripts
       copy: src=./files/{{ item }} dest=/srv/tunneldigger owner=root group=root mode=0500
-      with_items: tunneldigger_scripts
+      with_items: "{{ tunneldigger_scripts }}"
       when: tunneldigger.changed
     - name: Copy tunneldigger service template
       copy: src=./files/{{ item }} dest=/etc/systemd/system owner=root group=root mode=0444
-      with_items: tunneldigger_service
+      with_items: "{{ tunneldigger_service }}"
       when: tunneldigger.changed
 ##########
     - name: Add modules
       lineinfile: dest=/etc/modules line={{ item }}
-      with_items: modules_required
+      with_items: "{{ modules_required }}"
       register: modules_req
-    - name: Load modules
-      modprobe: name={{ item }}
-      with_items: modules_required
-      when: modules_req.changed
+#    - name: Load modules
+#      modprobe: name= "{{ item }}"
+#      with_items: "{{ modules_required }}"
+#      when: modules_req.changed
 #########
     - name: Tunneldigger reload
       command: "{{item}}"
@@ -201,32 +215,32 @@
       when: tunneldigger.changed
     - name: Copy logrotate config
       copy: src=./files/{{ item }} dest=/etc/ owner=root group=root mode=0500
-      with_items: logrotate_config
+      with_items: "{{logrotate_config}}"
     - name: Create freifunk directory
       file: path=/opt/freifunk state=directory mode=0755
-    - name: Create keepalive directory
-      file: path=/etc/supernode-status state=directory mode=0755
-    - name: Create supernode config files
-      file: path=/etc/supernode-status/{{ item }} state=touch owner=root group=root mode=0644
-      with_items: supernode_config
-    - name: Supernode set default mode
-      lineinfile: dest=/etc/supernode-status/{{ item }} regexp=^0 line=0
-      with_items: supernode_config
-    - name: Check gateway / keepalive script supernode
-      copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
-      with_items: check_gw_script
-      register: check_gw
-      when: sn_exit is undefined
-    - name: Check gateway / keepalive script super- and exitnode
-      template: src=./files/keepalive.exit.sh.j2 dest=/opt/freifunk/keepalive.sh owner=root group=root mode=0500
-      register: check_gw
-      when: sn_exit is defined
-    - name: Add cron job with check gateway script
-      cron: name=check_gw special_time=reboot job="/opt/freifunk/keepalive.sh > /dev/null 2>&1 &" user="root" 
-      when: check_gw.changed
-    - name: Supernode Config script super- and exitnode
-      copy: src=./files/supernode dest=/usr/bin/supernode owner=root group=root mode=0500
-      when: sn_exit is defined
+#    - name: Create keepalive directory
+#      file: path=/etc/supernode-status state=directory mode=0755
+#    - name: Create supernode config files
+#      file: path=/etc/supernode-status/{{ item }} state=touch owner=root group=root mode=0644
+#      with_items: supernode_config
+#    - name: Supernode set default mode
+#      lineinfile: dest=/etc/supernode-status/{{ item }} regexp=^0 line=0
+#      with_items: supernode_config
+#    - name: Check gateway / keepalive script supernode
+#      copy: src=./files/{{ item }} dest=/opt/freifunk owner=root group=root mode=0500
+#      with_items: check_gw_script
+#      register: check_gw
+#      when: sn_exit is undefined
+#    - name: Check gateway / keepalive script super- and exitnode
+#      template: src=./files/keepalive.exit.sh.j2 dest=/opt/freifunk/keepalive.sh owner=root group=root mode=0500
+#      register: check_gw
+#      when: sn_exit is defined
+#    - name: Add cron job with check gateway script
+#      cron: name=check_gw special_time=reboot job="/opt/freifunk/keepalive.sh > /dev/null 2>&1 &" user="root" 
+#      when: check_gw.changed
+#    - name: Supernode Config script super- and exitnode
+#      copy: src=./files/supernode dest=/usr/bin/supernode owner=root group=root mode=0500
+#      when: sn_exit is defined
     - name: Copy dhcpd template file
       template: src=./files/dhcpd.conf.j2 dest=/etc/dhcp/dhcpd.conf owner=root group=root mode=0444
       register: dhcpd
@@ -251,12 +265,12 @@
     - name: Copy backbone script
       template: src=./files/l2tp_backbone.sh.exit.j2 dest=/opt/freifunk/l2tp_backbone.sh owner=root group=root mode=0544
       when: sn_exit is defined
-    - name: Collectd template file
-      template: src=./files/collectd.conf.j2 dest=/etc/collectd/collectd.conf owner=root group=root mode=0444
-      register: collectd
-    - name: Restart collectd
-      service: name=collectd state=restarted
-      when: collectd.changed
+#    - name: Collectd template file
+#      template: src=./files/collectd.conf.j2 dest=/etc/collectd/collectd.conf owner=root group=root mode=0444
+#      register: collectd
+#    - name: Restart collectd
+#      service: name=collectd state=restarted
+#      when: collectd.changed
     - name: configure startup script supernode
       template: src=./files/sn_startup.sh.j2 dest=/opt/freifunk/sn_startup.sh owner=root group=root mode=0500
       when: sn_exit is undefined
@@ -265,7 +279,7 @@
       when: sn_exit is defined
     - name: SSH authorized_keys
       copy: src=./files/{{ item }} dest=/root/.ssh owner=root group=root mode=0400
-      with_items: authorized_keys
+      with_items: "{{ authorized_keys }}"
     - name: Bind9, activate fftdf zone
       lineinfile: dest=/etc/bind/named.conf line='include "/etc/bind/fftdf/fftdf.conf";' state=present
     - name: Copy option template
@@ -285,7 +299,7 @@
       when: sn_exit is defined
     - apt: update_cache=yes
     - name: Install bird
-      apt: state=installed pkg=bird
+      apt: state=present pkg=bird
       when: sn_exit is defined
     - name: Bird configuration
       copy: src=./files/bird-{{ sn_hostname }}.conf dest=/etc/bird/bird.conf owner=bird group=bird mode=0444
@@ -293,16 +307,18 @@
     - name: Bird configuration
       copy: src=./files/bird6-{{ sn_hostname }}.conf dest=/etc/bird/bird6.conf owner=bird group=bird mode=0444
       when: sn_exit is defined
-    - name: Get speedtest-cli
-      get_url: url=https://raw.githubusercontent.com/MightySCollins/speedtest-cli/master/speedtest_cli.py dest=/usr/bin/speedtest-cli
-    - name: Change rights speedtest-cli
-      file: path=/usr/bin/speedtest-cli owner=root group=root mode=0755
+#    - name: Get speedtest-cli
+#      get_url: url=https://raw.githubusercontent.com/MightySCollins/speedtest-cli/master/speedtest_cli.py dest=/usr/bin/speedtest-cli
+#    - name: Change rights speedtest-cli
+#      file: path=/usr/bin/speedtest-cli owner=root group=root mode=0755
     - name: Copy Slacktee Config
       template: src=./files/slacktee.conf.j2 dest=/etc/slacktee.conf owner=root group=root mode=0544
     - name: Copy Slacktee
       copy: src=./files/slacktee.sh dest=/usr/local/bin/slacktee.sh owner=root group=root mode=0744
     - name: set netfilter rules
-      lineinfile: dest=/etc/sysctl.conf line="{{ item }}"
+      lineinfile:
+        dest: /etc/sysctl.conf
+        line: "{{ item }}"
       with_items:
                - net.ipv4.netfilter.ip_conntrack_generic_timeout = 240
                - net.ipv4.netfilter.ip_conntrack_tcp_timeout_established = 54000
@@ -315,18 +331,20 @@
       when: modprobe1.stat.exists == False
     - name: check /etc/modprobe.conf
       lineinfile: dest=/etc/modprobe.conf line="options ip_conntrack hashsize=65536"
+    - name: Change root password
+      user:
+       name: root
+       password: "{{ sn_rootpasswd }}"
+    - name: Logrotate rights
+      file: path=/etc/logrotate.conf mode=0644 owner=root group=root
+    - name: Wirte version information
+      shell: touch /etc/sn_version && echo {{ snversion }} > /etc/sn_version
     - name: Reboot the server finally
       shell: sleep 2 && shutdown -r now "Ansible updates triggered"
       async: 1
       poll: 0
       ignore_errors: true
       when: tunneldigger.changed
-    - name: Logrotate rights
-      file: path=/etc/logrotate.conf mode=0644 owner=root group=root
-    - name: Change root password
-      user: name=root password={{ sn_rootpasswd }}
-    - name: Wirte version information
-      shell: touch /etc/sn_version && echo {{ snversion }} > /etc/sn_version
     - name: waiting for server to come back
       local_action:
                    wait_for
@@ -343,3 +361,4 @@
         channel: "#technik"
         username: "Ansible on {{ inventory_hostname }}"
         parse: 'none'
+
