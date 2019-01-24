@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v3.1.1
+    snversion: master_v3.1.3
     batmanversion: v2017.4
     common_required_packages:
       - git
@@ -44,6 +44,9 @@
       - virtualenv
       - batman-adv
       - batctl
+      - libffi-dev
+      - libnetfilter-conntrack-dev
+      - libnfnetlink-dev
     modules_required:
       - batman-adv
       - nf_conntrack_netlink
@@ -88,8 +91,10 @@
 #             url: https://sks.pod01.fleetstreetops.com
 #             state: present
 
-    - name: Add backport repo to source list
+    - name: Add Freifuck repo to source list
       apt_repository: repo='deb https://freifuck.de/debian stretch main' state=present 
+    - name: Add backport repo to source list
+      apt_repository: repo='deb http://http.debian.net/debian stretch-backports main' state=present
     - name: Update apt cache
       apt: update_cache=yes
     - name: Gathering facts
@@ -166,21 +171,24 @@
 #      shell: cd /tmp/batctl && git checkout {{ batmanversion }} && make && make install
 #      when: getbatctl.changed
     - name: Get Tunneldigger
-      git: repo=https://github.com/Freifunk-Troisdorf/tunneldigger.git dest=/srv/tunneldigger
-#      git: repo=https://github.com/wlanslovenija/tunneldigger.git dest=/srv/tunneldigger version=v0.3.0
+#      git: repo=https://github.com/Freifunk-Troisdorf/tunneldigger.git dest=/srv/tunneldigger
+#      git: repo=https://github.com/wlanslovenija/tunneldigger.git dest=/srv/tunneldigger version=v0.1.0
+#      git: repo=https://github.com/wlanslovenija/tunneldigger.git dest=/srv/tunneldigger
 #      git: repo=https://github.com/ffrl/tunneldigger.git dest=/srv/tunneldigger
+      git: repo=https://github.com/rohammer/tunneldigger.git dest=/srv/tunneldigger
 #           version: release-0.22
       register: tunneldigger
       when: aptupdates.changed
     - name: Configure tunneldigger
-      command: "{{item}}"
-      with_items:
+      raw: "cd /srv/tunneldigger && virtualenv env_tunneldigger && source env_tunneldigger/bin/activate && cd broker && python setup.py install"
+#      command: "{{item}}"
+#      with_items:
 #       - virtualenv /srv/tunneldigger/ -p python2.7
-      - virtualenv /srv/tunneldigger/
+#      - virtualenv /srv/tunneldigger/
       when: tunneldigger.changed
-    - name: Tunneldigger requirements
-      pip: requirements=/srv/tunneldigger/broker/requirements.txt virtualenv=/srv/tunneldigger/
-      when: tunneldigger.changed
+#    - name: Tunneldigger requirements
+#      pip: requirements=/srv/tunneldigger/broker/requirements.txt virtualenv=/srv/tunneldigger/
+#      when: tunneldigger.changed
     - name: Copy l2tp broker config template
       template: src=./files/{{ item }} dest=/srv/tunneldigger owner=root group=root mode=0444
       with_items: "{{ broker_cfg }}"
