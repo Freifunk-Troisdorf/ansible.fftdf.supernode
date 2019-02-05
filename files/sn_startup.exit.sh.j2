@@ -35,10 +35,9 @@ curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted",
 /usr/local/sbin/batctl if add br-nodes
 
 sleep 5
-
-#Stop all Services - Started from keepalive.sh
-/bin/systemctl stop radvd
-/bin/systemctl stop tunneldigger
-/bin/systemctl stop bird
-/bin/systemctl stop bird6
+/bin/systemctl restart radvd
+/bin/systemctl retsrat tunneldigger
+/bin/systemctl restart bird
+/bin/systemctl restart bird6
+/bin/systemctl restart isc-dhcp-server
 exit 0
