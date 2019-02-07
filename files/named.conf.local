@@ -6,5 +6,5 @@
 // organization
 //include "/etc/bind/zones.rfc1918";
 
-// Include Freifunk Troisdorf (fftdf) zones
-include "/etc/bind/fftdf/fftdf.conf";
+// Include Freifunk (ff) zones
+include "/etc/bind/ff/ff.conf";

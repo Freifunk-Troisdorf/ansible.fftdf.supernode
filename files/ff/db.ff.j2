@@ -1,15 +1,15 @@
-;; db.fftdf
-;; Forwardlookupzone für .fftdf
+;; db.ff
+;; Forwardlookupzone für .ff
 ;;
 $TTL 600
-@       IN      SOA     fftdf. root.fftdf. (
+@       IN      SOA     ff. root.ff. (
                         2015584544      ; Serial
                                 8H      ; Refresh
                                 2H      ; Retry
                                 4W      ; Expire
                                 3H )    ; NX (TTL Negativ Cache)
 
-@                               IN      NS      {{ sn_hostname }}.infra.fftdf.
+@                               IN      NS      {{ sn_hostname }}.infra.ff.
                                 IN      A       {{ sn_mesh_IPv4 }}
                                 IN      AAAA	{{ sn_mesh_IPv6 }}
 localhost			IN	A    	127.0.0.1
