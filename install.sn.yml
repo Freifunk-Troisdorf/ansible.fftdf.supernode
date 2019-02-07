@@ -175,7 +175,7 @@
 #      git: repo=https://github.com/wlanslovenija/tunneldigger.git dest=/srv/tunneldigger version=v0.1.0
 #      git: repo=https://github.com/wlanslovenija/tunneldigger.git dest=/srv/tunneldigger
 #      git: repo=https://github.com/ffrl/tunneldigger.git dest=/srv/tunneldigger
-      git: repo=https://github.com/rohammer/tunneldigger.git dest=/srv/tunneldigger
+      git: repo=https://github.com/Freifunk-Troisdorf/tunneldigger.git dest=/srv/tunneldigger
 #           version: release-0.22
       register: tunneldigger
       when: aptupdates.changed
