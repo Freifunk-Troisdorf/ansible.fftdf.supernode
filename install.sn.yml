@@ -9,7 +9,7 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v3.1.5
+    snversion: master_v3.1.6
     batmanversion: v2017.4
     common_required_packages:
       - git
@@ -48,6 +48,7 @@
       - libnetfilter-conntrack-dev
       - libnfnetlink-dev
       - speedtest-cli
+      - ethtool
     modules_required:
       - batman-adv
       - nf_conntrack_netlink
@@ -61,6 +62,8 @@
       - batdelif.sh
     tunneldigger_service:
       - tunneldigger.service
+    respondd_service:
+      - respondd_service
     broker_cfg:
       - l2tp_broker.cfg
     authorized_keys:
@@ -172,6 +175,8 @@
     - name: Copy dhcpd template file
       template: src=./files/dhcpd.conf.j2 dest=/etc/dhcp/dhcpd.conf owner=root group=root mode=0444
       register: dhcpd
+    - name: Copy dhcpd6 template file
+      template: src=./files/dhcpd6.conf.j2 dest=/etc/dhcp/dhcpd6.conf owner=root group=root mode=0444
     - name: Clone static DHCP config
       git: repo="{{ static_dhcp_repo }}" dest=/opt/freifunk/static-dhcp
       when: dhcpd.changed 
@@ -220,6 +225,33 @@
       copy: src=./files/bird-{{ sn_hostname }}.conf dest=/etc/bird/bird.conf owner=bird group=bird mode=0444
     - name: Bird configuration
       copy: src=./files/bird6-{{ sn_hostname }}.conf dest=/etc/bird/bird6.conf owner=bird group=bird mode=0444
+    - name: Create Yanic user
+      user:
+         name: yanic
+         comment: "Yanic service user"
+    - name: Create Yanic folder
+      file: path=/opt/freifunk/yanic state=directory mode=0755 owner=yanic group=yanic
+    - name: Copy Yanic config template
+      template: src=./files/yanic.conf.j2 dest=/etc/yanic.conf owner=yanic group=yanic mode=0444
+    - name: Shit go stuff
+      shell: cd /usr/local && wget https://storage.googleapis.com/golang/go1.9.1.linux-amd64.tar.gz -O go-release-linux-amd64.tar.gz && tar xvf go-release-linux-amd64.tar.gz && rm go-release-linux-amd64.tar.gz
+    - name: Adjust path for go
+      lineinfile:
+        dest: /root/.bashrc
+        line: "{{ item }}"
+      with_items:
+               - export GOPATH=/opt/go
+               - export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+    - name: Compile go
+      shell: go get -v -u github.com/Freifunk-Troisdorf/yanic
+    - name: Copy and enable yanic service
+      shell: cp /opt/go/src/github.com/Freifunk-Troisdorf/yanic/contrib/init/linux-systemd/yanic.service /lib/systemd/system/yanic.service && systemctl daemon-reload && systemctl enable yanic
+    - name: Get respondd
+      git: repo=https://github.com/Freifunk-Troisdorf/mesh-announce.git dest=/opt/mesh-announce
+    - name: Copy respondd service template
+      shell: cp /opt/mesh-announce/respondd.service /etc/systemd/system
+    - name: Enable respondd service
+      shell: systemctl daemon-reload && systemctl enable respondd
     - name: Copy Slacktee Config
       template: src=./files/slacktee.conf.j2 dest=/etc/slacktee.conf owner=root group=root mode=0544
     - name: Copy Slacktee

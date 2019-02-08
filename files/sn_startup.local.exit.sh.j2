@@ -1,6 +1,8 @@
 #!/bin/sh
 # Version 1.91
 
+sleep 5
+
 curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted", "channel": "#technik", "username": "{{ sn_hostname }}", "icon_emoji": ":floppy_disk:"}' https://hooks.slack.com/services/{{ slack_token }}
 
 # Activate IP forwarding
@@ -34,10 +36,20 @@ curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted",
 /sbin/ebtables -A FORWARD --logical-in br-nodes -j DROP
 /usr/local/sbin/batctl if add br-nodes
 
-sleep 5
+/bin/sleep 90
 /bin/systemctl restart radvd
+/bin/sleep 2
 /bin/systemctl retsrat tunneldigger
+/bin/sleep 2
 /bin/systemctl restart bird
+/bin/sleep 2
 /bin/systemctl restart bird6
-/bin/systemctl restart isc-dhcp-server
+/bin/sleep 2
+/bin/systemctl stop isc-dhcp-server
+/bin/sleep 2
+/usr/bin/killall dhcpd
+/bin/sleep 2
+/bin/rm /var/run/dhcpd.pid
+/bin/sleep 2
+/bin/systemctl start isc-dhcp-server
 exit 0
