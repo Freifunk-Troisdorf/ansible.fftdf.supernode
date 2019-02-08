@@ -39,7 +39,7 @@ ifname = "bat0"
 # This is useful for testing purposes or for a little standalone installation.
 [webserver]
 enable  = true
-bind    = "0.0.0.0:80"
+bind    = "0.0.0.0:8080"
 webroot = "/opt/freifunk/yanic"
 
 
@@ -94,18 +94,18 @@ offline_after = "10m"
 
 
 # definition for the new more compressed meshviewer.json
-[[nodes.output.meshviewer-ff]]
+[[nodes.output.meshviewer-ffrgb]]
 enable   = true
 path = "/opt/freifunk/yanic/meshviewer.json"
 
-[nodes.output.meshviewer-ff.filter]
+[nodes.output.meshviewer-ffrgb.filter]
 # WARNING: if it is not set, it will publish contact information of other persons
 no_owner = true
 #blacklist = ["00112233445566", "1337f0badead"]
 #sites = ["ffhb"]
 #has_location = true
 
-#[nodes.output.meshviewer-ff.filter.in_area]
+#[nodes.output.meshviewer-ffrgb.filter.in_area]
 #latitude_min = 34.30
 #latitude_max = 71.85
 #longitude_min = -24.96
