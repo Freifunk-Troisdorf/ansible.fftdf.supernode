@@ -3,8 +3,7 @@
 # ansible troisdorf4 -u root -m raw -a "apt-get update && apt-get install python -y"
 
 - name: Install Freifunk Troisdorf super node
-#  hosts: FreifunkSupernodesL2TP
-  hosts: '{{ target }}'
+  hosts: all
   sudo: False
   user: root
   gather_facts: False
