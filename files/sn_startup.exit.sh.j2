@@ -45,6 +45,8 @@ curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted",
 /bin/sleep 2
 /bin/systemctl restart bird6
 /bin/sleep 2
+/bin/systemctl restart respondd
+/bin/sleep 2
 /bin/systemctl stop isc-dhcp-server
 /bin/sleep 2
 /usr/bin/killall dhcpd
