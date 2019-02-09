@@ -9,8 +9,8 @@
   user: root
   gather_facts: False
   vars:
-    snversion: master_v3.1.6
-    batmanversion: v2017.4
+# Internal verion number
+    snversion: 2019_v3.1.6
     common_required_packages:
       - git
       - make
@@ -105,7 +105,7 @@
     - name: set hostname
       hostname: name='{{ sn_hostname }}'
       register: sethostname
-    - name: disable multi CPU Kernel (SMP)
+    - name: disable multi CPU Kernel (SMP) # Batman don not like SMP
       lineinfile: dest=/etc/default/grub regexp='^GRUB_CMDLINE_LINUX_DEFAULT=' line='GRUB_CMDLINE_LINUX_DEFAULT="quiet maxcpus=0 nosmp"' state=present
       register: grubnosmp
     - name: Update grub
