@@ -3,9 +3,9 @@
 sleep 60
 batctl=/usr/local/sbin/batctl
 ip=/sbin/ip
-communitymacaddress="a2:8c:ae:6f:f6"
+communitymacaddress="{{ communitymac }}"
 localserver=$(/bin/hostname)
-communityname=troisdorf
+communityname={{ communityname }}
 
 # Rest Starten
 $ip link set address $communitymacaddress:0${localserver#$communityname} dev bat0
