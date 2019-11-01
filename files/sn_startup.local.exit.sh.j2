@@ -20,12 +20,12 @@ curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted",
 /bin/ip -6 rule add fwmark 0x4 table 42
 
 # Set mark 4 to Freifunk traffic
-/sbin/iptables -t mangle -A PREROUTING -s 10.0.0.0/8 ! -d 10.0.0.0/8 -j MARK --set-mark 4
-/sbin/ip6tables -t mangle -A PREROUTING -s 2a03:2260:121::/48 ! -d 2a03:2260:121::/48 -j MARK --set-mark 4
+#/sbin/iptables -t mangle -A PREROUTING -s 10.0.0.0/8 ! -d 10.0.0.0/8 -j MARK --set-mark 4
+#/sbin/ip6tables -t mangle -A PREROUTING -s 2a03:2260:121::/48 ! -d 2a03:2260:121::/48 -j MARK --set-mark 4
 
 # All from FF IPv4 via routing table 42
-/bin/ip rule add from {{ sn_ffrl_IPv4 }}/32 lookup 42
-/bin/ip -6 rule add from {{ sn_mesh_IPv6_net }} lookup 42
+#/bin/ip rule add from {{ sn_ffrl_IPv4 }}/32 lookup 42
+#/bin/ip -6 rule add from {{ sn_mesh_IPv6_net }} lookup 42
 
 # Allow MAC address spoofing
 /sbin/sysctl net.ipv4.conf.bat0.rp_filter=0
@@ -55,4 +55,3 @@ curl -X POST --data-urlencode 'payload={"text": "{{ sn_hostname }} is rebooted",
 /bin/sleep 2
 /bin/systemctl start isc-dhcp-server
 exit 0
-
