@@ -182,6 +182,12 @@
     - name: Add cron static DHCP
       cron: name=StaticDHCP minute="*" job="/opt/freifunk/static-dhcp/dhcp-update.sh"
       when: dhcpd.changed
+    - name: Replace interface line ISC-DHCP-server
+      lineinfile:
+        dest: /etc/default/isc-dhcp-server
+        regexp: 'INTERFACESv4='
+        line: 'INTERFACESv4="br-nodes"'
+      when: dhcpd.changed
     - name: Restart dhcpd
       service: name=isc-dhcp-server state=restarted
       when: dhcpd.changed
