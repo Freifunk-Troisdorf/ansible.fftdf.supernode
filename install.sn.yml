@@ -233,7 +233,7 @@
     - name: Copy Yanic config template
       template: src=./files/yanic.conf.j2 dest=/etc/yanic.conf owner=yanic group=yanic mode=0444
     - name: Shit go stuff
-      shell: cd /usr/local && wget wget https://dl.google.com/go/go1.13.1.linux-amd64.tar.gz -O go-release-linux-amd64.tar.gz -O go-release-linux-amd64.tar.gz && tar xvf go-release-linux-amd64.tar.gz && rm go-release-linux-amd64.tar.gz
+      shell: cd /usr/local && wget https://dl.google.com/go/go1.13.1.linux-amd64.tar.gz -O go-release-linux-amd64.tar.gz -O go-release-linux-amd64.tar.gz && tar xvf go-release-linux-amd64.tar.gz && rm go-release-linux-amd64.tar.gz
     - name: Adjust path for go
       lineinfile:
         dest: /root/.bashrc
