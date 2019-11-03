@@ -48,6 +48,7 @@
       - libnfnetlink-dev
       - speedtest-cli
       - ethtool
+      - prometheus-node-exporter
     modules_required:
       - batman-adv
       - nf_conntrack_netlink
