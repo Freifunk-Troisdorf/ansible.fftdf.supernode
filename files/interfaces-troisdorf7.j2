@@ -23,6 +23,10 @@ iface {{ sn_interface_name }} inet static
         post-up iptables -A OUTPUT -o $IFACE -d 172.16.0.0/12 -j DROP
         post-up iptables -A OUTPUT -o $IFACE -d 169.254.0.0/16 -j DROP
         post-up iptables -A OUTPUT -o $IFACE -d 192.168.0.0/16 -j DROP
+        post-up iptables -A FORWARD -o $IFACE -d 10.0.0.0/8 -j DROP
+        post-up iptables -A FORWARD -o $IFACE -d 172.16.0.0/12 -j DROP
+        post-up iptables -A FORWARD -o $IFACE -d 169.254.0.0/16 -j DROP
+        post-up iptables -A FORWARD -o $IFACE -d 192.168.0.0/16 -j DROP
         post-up iptables -t nat -A POSTROUTING -o $IFACE -j MASQUERADE
 #auto 6to4
 #        iface 6to4 inet6 6to4
