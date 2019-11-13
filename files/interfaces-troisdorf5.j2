@@ -16,9 +16,8 @@ iface lo inet6 loopback
 allow-hotplug {{ sn_interface_name }}
 iface {{ sn_interface_name }} inet static
         address 46.4.156.115
-        netmask 255.255.255.255
-        gateway 163.172.210.1
-        pointopoint 163.172.210.1
+        netmask 255.255.255.240
+        gateway 46.4.156.113
         post-up iptables -P OUTPUT ACCEPT
         post-up iptables -A OUTPUT -o $IFACE -d 10.0.0.0/8 -j DROP
         post-up iptables -A OUTPUT -o $IFACE -d 172.16.0.0/12 -j DROP
