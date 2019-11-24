@@ -1,12 +1,7 @@
-Ansible file to manage Freifunk Troisdorf supernodes
-example: ansible-playbook install.sn.yml -l hosts
+# Freifunk-Rhein-Sieg.net
 
-To install a individual host you have to start it explicit with the target server
-example: ansible-playbook install.sn.yml -l hosts -l troisdorf7 -v
+Dieses Repo wurde auf den Git Server des Freifunk Rhein-Sieg umgezogen.
 
-The hosts file is the most important file.
+https://git.freifunk-rhein-sieg.net/Freifunk-Troisdorf/ansible.fftdf.supernode 
 
-You will find some example files:
-files/hosts.example
-files/root_pwd.yml.example
-files/slack_token.yml.example
+Feel free to edit there!
